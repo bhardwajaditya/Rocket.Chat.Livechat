@@ -125,7 +125,7 @@ export class MessageList extends MemoizedComponent {
 		messages,
 		lastReadMessageId,
 		uid,
-		conversationFinishedMessage,
+		conversationFinishedText,
 		typingUsernames,
 		resetLastAction,
 	}) => {
@@ -156,7 +156,7 @@ export class MessageList extends MemoizedComponent {
 					use='li'
 					me={uid && message.u && uid === message.u._id}
 					compact={nextMessage && message.u && nextMessage.u && message.u._id === nextMessage.u._id && !nextMessage.t}
-					conversationFinishedMessage={conversationFinishedMessage}
+					conversationFinishedText={conversationFinishedText}
 					resetLastAction={resetLastAction}
 					{...message}
 				/>,
