@@ -34,7 +34,8 @@ export class App extends Component {
 		poppedOut: false,
 	}
 
-	handleRoute = async () => {
+	handleRoute = async (e) => {
+		await store.setState({ route: e.url });
 		setTimeout(() => {
 			const {
 				config: {

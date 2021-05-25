@@ -86,9 +86,9 @@ class Triggers {
 	constructor() {
 		if (!Triggers.instance) {
 			this._started = false;
+			this._chatOpened = false;
 			this._requests = [];
 			this._triggers = [];
-			this._inProgress = {};
 			this._enabled = true;
 			Triggers.instance = this;
 		}
@@ -183,6 +183,15 @@ class Triggers {
 		this.processTriggers();
 	}
 
+	processChatOpened() {
+		this._chatOpened = true;
+		if (!this._started) {
+			return;
+		}
+
+		this.processTriggers();
+	}
+
 	processTriggers() {
 		this._triggers.forEach((trigger) => {
 			if (trigger.skip) {
@@ -209,15 +218,12 @@ class Triggers {
 							this.fire(trigger);
 						}, parseInt(condition.value, 10) * 1000);
 						break;
-					case 'open-chat-window':
-						store.on('change', ([state, prevState]) => {
-							if (prevState.minimized && !state.minimized && !self._inProgress[trigger._id]) {
-								self._inProgress[trigger._id] = true;
-								self.fire(trigger).then(() => {
-									self._inProgress[trigger._id] = false;
-								});
-							}
-						});
+					case 'chat-opened-by-visitor':
+						if (!this._chatOpened) {
+							break;
+						}
+						this._chatOpened = false;
+						self.fire(trigger);
 						break;
 				}
 			});

@@ -9,7 +9,8 @@ import { normalizeQueueAlert } from '../../lib/api';
 import constants from '../../lib/constants';
 import { loadConfig } from '../../lib/main';
 import { parentCall, runCallbackEventEmitter } from '../../lib/parentCall';
-import { initRoom, assignRoom, closeChat, loadMessages, loadMoreMessages, defaultRoomParams, getGreetingMessages, onChatClose, CLOSE_CHAT } from '../../lib/room';
+import { initRoom, closeChat, loadMessages, loadMoreMessages, defaultRoomParams, getGreetingMessages, onChatClose, CLOSE_CHAT } from '../../lib/room';
+import triggers from '../../lib/triggers';
 import store, { Consumer } from '../../store';
 import Chat from './component';
 
@@ -23,7 +24,7 @@ export class ChatContainer extends Component {
 	}
 
 	checkConnectingAgent = async () => {
-		const { connecting, queueInfo, startSession } = this.props;
+		const { connecting, queueInfo } = this.props;
 		const { connectingAgent, queueSpot, estimatedWaitTime } = this.state;
 
 		const newConnecting = connecting;
@@ -36,11 +37,6 @@ export class ChatContainer extends Component {
 			this.state.estimatedWaitTime = newEstimatedWaitTime;
 			await this.handleQueueMessage(connecting, queueInfo);
 			await this.handleConnectingAgentAlert(newConnecting, normalizeQueueAlert(queueInfo));
-
-			if (startSession) {
-				await this.grantUser();
-				await assignRoom();
-			}
 		}
 	}
 
@@ -368,7 +364,7 @@ export class ChatContainer extends Component {
 	}
 
 	async componentDidUpdate(prevProps) {
-		const { messages, visible, minimized, dispatch } = this.props;
+		const { messages, visible, minimized, dispatch, room, route } = this.props;
 		const { messages: prevMessages, alerts: prevAlerts } = prevProps;
 
 		if (messages && prevMessages && messages.length !== prevMessages.length && visible && !minimized) {
@@ -377,6 +373,14 @@ export class ChatContainer extends Component {
 			if ((nextLastMessage && lastMessage && nextLastMessage._id !== lastMessage._id) || (messages.length === 1 && prevMessages.length === 0)) {
 				const newAlerts = prevAlerts.filter((item) => item.id !== constants.unreadMessagesAlertId);
 				dispatch({ alerts: newAlerts, unread: null, lastReadMessageId: nextLastMessage._id });
+			}
+		} else if (!room && visible && !minimized) {
+			if (prevProps.minimized) {
+				// Trigger Chat Opened when user starts chat by clicking icon
+				triggers.processChatOpened();
+			} else if (prevProps.route !== route && route === '/') {
+				// Trigger Chat Opened when user goes to chat by registering or new chat
+				triggers.processChatOpened();
 			}
 		}
 
@@ -421,7 +425,6 @@ export const ChatConnector = ({ ref, ...props }) => (
 				settings: {
 					fileUpload: uploads,
 					guestDefaultAvatar: defaultAvatar,
-					startSessionOnNewChat: startSession,
 					allowSwitchingDepartments,
 					forceAcceptDataProcessingConsent: allowRemoveUserData,
 					showConnecting,
@@ -435,7 +438,7 @@ export const ChatConnector = ({ ref, ...props }) => (
 					livechat_kill_switch_message,
 				} = {},
 				messages: {
-					conversationFinishedMessage,
+					conversationFinishedText,
 				} = {},
 				theme: {
 					color,
@@ -469,6 +472,7 @@ export const ChatConnector = ({ ref, ...props }) => (
 			lastReadMessageId,
 			triggerAgent,
 			queueInfo,
+			route,
 		}) => (
 			<ChatContainer
 				ref={ref}
@@ -506,10 +510,9 @@ export const ChatConnector = ({ ref, ...props }) => (
 				connecting={!!(room && !agent && (showConnecting || queueInfo))}
 				dispatch={dispatch}
 				departments={departments}
-				startSession={startSession}
 				defaultAvatar={defaultAvatar}
 				allowSwitchingDepartments={allowSwitchingDepartments}
-				conversationFinishedMessage={conversationFinishedMessage || I18n.t('Chat finished')}
+				conversationFinishedText={conversationFinishedText || I18n.t('Chat finished')}
 				allowRemoveUserData={allowRemoveUserData}
 				transcript={transcript}
 				printTranscript={printTranscript}
@@ -531,6 +534,7 @@ export const ChatConnector = ({ ref, ...props }) => (
 				composerConfig={composerConfig}
 				livechat_kill_switch={livechat_kill_switch}
 				livechat_kill_switch_message={livechat_kill_switch_message}
+				route={route}
 			/>
 		)}
 	</Consumer>

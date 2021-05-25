@@ -1,5 +1,5 @@
 import { Livechat } from '../api';
-import I18n from '../i18n';
+// import I18n from '../i18n';
 import store from '../store';
 import constants from './constants';
 import { loadConfig } from './main';
@@ -65,13 +65,15 @@ const Connection = {
 
 	async handleConnected() {
 		await self.clearAlerts();
-		await self.displayAlert({ id: livechatConnectedAlertId, children: I18n.t('Livechat connected.'), success: true });
+		// Viasat
+		// await self.displayAlert({ id: livechatConnectedAlertId, children: I18n.t('Livechat connected.'), success: true });
 		await loadMessages();
 	},
 
 	async handleDisconnected() {
 		await self.clearAlerts();
-		await self.displayAlert({ id: livechatDisconnectedAlertId, children: I18n.t('Livechat is not connected.'), error: true, timeout: 0 });
+		// Viasat
+		// await self.displayAlert({ id: livechatDisconnectedAlertId, children: I18n.t('Livechat is not connected.'), error: true, timeout: 0 });
 		self.reconnect();
 	},
 

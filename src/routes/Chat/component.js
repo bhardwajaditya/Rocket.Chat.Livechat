@@ -113,7 +113,7 @@ export default class Chat extends Component {
 		agent,
 		typingUsernames,
 		avatarResolver,
-		conversationFinishedMessage,
+		conversationFinishedText,
 		loading,
 		onUpload,
 		messages,
@@ -166,7 +166,7 @@ export default class Chat extends Component {
 							uid={uid}
 							messages={messages}
 							typingUsernames={typingUsernames}
-							conversationFinishedMessage={conversationFinishedMessage}
+							conversationFinishedText={conversationFinishedText}
 							lastReadMessageId={lastReadMessageId}
 							onScrollTo={this.handleScrollTo}
 							resetLastAction={resetLastAction}
