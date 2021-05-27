@@ -155,6 +155,8 @@ export class App extends Component {
 		});
 
 		I18n.on('change', this.handleLanguageChange);
+
+		document.title = this.props.config.theme.title;
 	}
 
 	checkPoppedOutWindow() {
