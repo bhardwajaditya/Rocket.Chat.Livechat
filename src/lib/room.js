@@ -15,10 +15,11 @@ const commands = new Commands();
 export const CLOSE_CHAT = 'Close Chat';
 
 export const onChatClose = async () => {
-	store.setState({ composerConfig: { disable: false, disableText: 'Please Wait', onDisabledComposerClick: () => {} } });
+	await store.setState({ loading: true });
 	await loadConfig();
+	await store.setState({ alerts: [], composerConfig: { disable: false, disableText: 'Please Wait', onDisabledComposerClick: () => {} } });
 	route('/chat-finished');
-	store.setState({ alerts: [] });
+	await store.setState({ loading: false });
 };
 
 export const closeChat = async ({ transcriptRequested } = {}) => {
@@ -90,7 +91,7 @@ const processMessage = async (message) => {
 const doPlaySound = async (message) => {
 	const { sound, user } = store.state;
 
-	if (!sound.enabled || (user && message.u && message.u._id === user._id)) {
+	if (!sound.enabled || (user && message.u && message.u._id === user._id) || !message.msg) {
 		return;
 	}
 
@@ -229,15 +230,18 @@ Livechat.onMessage(async (message) => {
 export const getGreetingMessages = (messages) => messages && messages.filter((msg) => msg.trigger);
 
 export const loadMessages = async () => {
-	const { messages: storedMessages, room: { _id: rid } = {} } = store.state;
-	const previousMessages = getGreetingMessages(storedMessages);
+	const { room: { _id: rid } = {} } = store.state;
 
 	if (!rid) {
 		return;
 	}
 
 	await store.setState({ loading: true });
-	const rawMessages = (await Livechat.loadMessages(rid)).concat(previousMessages);
+	let rawMessages = await Livechat.loadMessages(rid);
+	const { messages: storedMessages } = store.state;
+	(storedMessages || []).forEach((message) => {
+		rawMessages = upsert(rawMessages, message, ({ _id }) => _id === message._id, ({ ts }) => ts);
+	});
 	const messages = (await normalizeMessages(rawMessages)).map(transformAgentInformationOnMessage).map((message) => {
 		const oldMessage = storedMessages.find((x) => x._id === message._id);
 		if (oldMessage && oldMessage.actionsVisible !== undefined) {
@@ -247,7 +251,7 @@ export const loadMessages = async () => {
 	});
 
 	await initRoom();
-	await store.setState({ messages: (messages || []).reverse(), noMoreMessages: false, loading: false });
+	await store.setState({ messages: (messages || []).sort((a, b) => new Date(a.ts) - new Date(b.ts)), noMoreMessages: false, loading: false });
 
 	if (messages && messages.length) {
 		const lastMessage = messages[messages.length - 1];
@@ -315,17 +319,13 @@ export const defaultRoomParams = () => {
 };
 
 export const assignRoom = async () => {
-	const { defaultAgent: agent = {}, room } = store.state;
-	const params = {};
+	const { room } = store.state;
 
 	if (room) {
 		return;
 	}
 
-	if (agent && agent._id) {
-		Object.assign(params, { agentId: agent._id });
-	}
-
+	const params = defaultRoomParams();
 	const newRoom = await Livechat.room(params);
 	await store.setState({ room: newRoom });
 	await initRoom();
