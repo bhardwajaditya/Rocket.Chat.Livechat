@@ -3,7 +3,8 @@
 
 	min-width: 32px;
 	padding: 0 5px;
-	align-self: end;
+	align-self: flex-end;
+	margin-bottom: 1px;
 	flex-flow: row nowrap;
 
 	&__avatar {

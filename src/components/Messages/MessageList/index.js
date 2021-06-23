@@ -147,6 +147,33 @@ export class MessageList extends MemoizedComponent {
 				);
 			}
 
+			const isMyMessage = (msg) => uid && msg?.u && uid === msg?.u._id;
+			const msgSequence = (msg) => {
+				if(message.t) {
+					return;
+				}
+
+				let sequence = 'mid';
+
+				if (isMyMessage(msg)) {
+					if (!isMyMessage(previousMessage)) {
+						sequence = 'first'
+					}
+					else if (isMyMessage(previousMessage) && !isMyMessage(nextMessage)) {
+						sequence = 'last'
+					}
+				}
+				else {
+					if (isMyMessage(previousMessage)) {
+						sequence = 'first'
+					}
+					if (!isMyMessage(previousMessage) && (isMyMessage(nextMessage) || !nextMessage)) {
+						sequence = 'last'
+					}
+				}
+
+				return sequence;
+			}
 
 			isNotEmpty(message) && !shouldHideMessage(message) && items.push(
 				<Message
@@ -154,7 +181,8 @@ export class MessageList extends MemoizedComponent {
 					attachmentResolver={attachmentResolver}
 					avatarResolver={avatarResolver}
 					use='li'
-					me={uid && message.u && uid === message.u._id}
+					me={isMyMessage(message)}
+					msgSequence={msgSequence(message)}
 					compact={nextMessage && message.u && nextMessage.u && message.u._id === nextMessage.u._id && !nextMessage.t}
 					conversationFinishedText={conversationFinishedText}
 					resetLastAction={resetLastAction}
