@@ -19,7 +19,7 @@ const registerGuestAndCreateSession = async (triggerAction) => {
 	}
 
 	store.setState({ loading: true });
-
+	store.setState({ composerConfig: { disable: true, disableText: 'Starting chat...' } });
 	try {
 		const { params } = triggerAction;
 		const guest = { token: token || createToken(), department: params && params.department };
@@ -37,7 +37,7 @@ const registerGuestAndCreateSession = async (triggerAction) => {
 		runCallbackEventEmitter(reason);
 		throw error;
 	} finally {
-		store.setState({ loading: false });
+		store.setState({ loading: false, composerConfig: { disable: false } });
 	}
 };
 

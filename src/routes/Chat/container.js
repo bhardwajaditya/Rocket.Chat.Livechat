@@ -70,6 +70,7 @@ export class ChatContainer extends Component {
 		}
 
 		await dispatch({ loading: true });
+		await dispatch({ composerConfig: { disable: true, disableText: 'Starting chat...' } });
 		try {
 			const params = defaultRoomParams();
 			const newRoom = await Livechat.room(params);
@@ -86,7 +87,7 @@ export class ChatContainer extends Component {
 			runCallbackEventEmitter(reason);
 			throw error;
 		} finally {
-			await dispatch({ loading: false });
+			await dispatch({ loading: false, composerConfig: { disable: false } });
 		}
 	}
 
