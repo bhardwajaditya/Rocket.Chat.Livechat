@@ -34,7 +34,8 @@ export class App extends Component {
 		poppedOut: false,
 	}
 
-	handleRoute = async () => {
+	handleRoute = async (e) => {
+		await store.setState({ route: e.url });
 		setTimeout(() => {
 			const {
 				config: {
@@ -154,6 +155,8 @@ export class App extends Component {
 		});
 
 		I18n.on('change', this.handleLanguageChange);
+
+		document.title = this.props.config.theme.title;
 	}
 
 	checkPoppedOutWindow() {
@@ -206,6 +209,7 @@ export class App extends Component {
 		expanded,
 		alerts,
 		modal,
+		composerConfig,
 	}, { initialized, poppedOut }) => {
 		if (!initialized) {
 			return null;
@@ -218,6 +222,7 @@ export class App extends Component {
 			sound,
 			alerts,
 			modal,
+			composerConfig,
 			onEnableNotifications: this.handleEnableNotifications,
 			onDisableNotifications: this.handleDisableNotifications,
 			onMinimize: this.handleMinimize,
@@ -258,6 +263,7 @@ const AppConnector = () => (
 					modal,
 					dispatch,
 					iframe,
+					composerConfig,
 				}) => (
 					<App
 						config={config}
@@ -272,6 +278,7 @@ const AppConnector = () => (
 						modal={modal}
 						dispatch={dispatch}
 						iframe={iframe}
+						composerConfig={composerConfig}
 					/>
 				)}
 			</StoreConsumer>

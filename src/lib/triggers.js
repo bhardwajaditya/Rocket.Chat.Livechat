@@ -2,13 +2,45 @@ import { route } from 'preact-router';
 
 import { Livechat } from '../api';
 import { upsert, createToken, asyncForEach } from '../components/helpers';
+import I18n from '../i18n';
 import store from '../store';
 import { normalizeAgent } from './api';
 import { processUnread } from './main';
-import { parentCall } from './parentCall';
+import { parentCall, runCallbackEventEmitter } from './parentCall';
+import { assignRoom } from './room';
 
 const agentCacheExpiry = 3600000;
 let agentPromise;
+
+const registerGuestAndCreateSession = async (triggerAction) => {
+	const { alerts, room, token } = store.state;
+	if (room) {
+		return room;
+	}
+
+	store.setState({ loading: true });
+	store.setState({ composerConfig: { disable: true, disableText: 'Starting chat...' } });
+	try {
+		const { params } = triggerAction;
+		const guest = { token: token || createToken(), department: params && params.department };
+		store.setState(guest);
+		const user = await Livechat.grantVisitor({ visitor: { ...guest } });
+		store.setState({ user });
+		await assignRoom();
+
+		parentCall('callback', 'chat-started');
+	} catch (error) {
+		const { data: { error: reason } } = error;
+		const alert = { id: createToken(), children: I18n.t('Error starting a new conversation: %{reason}', { reason }), error: true, timeout: 10000 };
+		store.setState({ loading: false, alerts: (alerts.push(alert), alerts) });
+
+		runCallbackEventEmitter(reason);
+		throw error;
+	} finally {
+		store.setState({ loading: false, composerConfig: { disable: false } });
+	}
+};
+
 const getAgent = (triggerAction) => {
 	if (agentPromise) {
 		return agentPromise;
@@ -54,6 +86,7 @@ class Triggers {
 	constructor() {
 		if (!Triggers.instance) {
 			this._started = false;
+			this._chatOpened = false;
 			this._requests = [];
 			this._triggers = [];
 			this._enabled = true;
@@ -90,8 +123,8 @@ class Triggers {
 	}
 
 	async fire(trigger) {
-		const { token, user, firedTriggers = [] } = store.state;
-		if (!this._enabled || user) {
+		const { token, user, firedTriggers = [], config: { settings: { registrationForm } } } = store.state;
+		if (!this._enabled || trigger.skip || (trigger.registeredOnly && registrationForm && !user)) {
 			return;
 		}
 		const { actions } = trigger;
@@ -127,6 +160,10 @@ class Triggers {
 					parentCall('openWidget');
 					store.setState({ minimized: false });
 				});
+			} else if (action.name === 'start-session') {
+				registerGuestAndCreateSession(action).then(() => {
+					store.setState({ triggered: true });
+				});
 			}
 		});
 
@@ -139,6 +176,15 @@ class Triggers {
 
 	processRequest(request) {
 		this._requests.push(request);
+		if (!this._started) {
+			return;
+		}
+
+		this.processTriggers();
+	}
+
+	processChatOpened() {
+		this._chatOpened = true;
 		if (!this._started) {
 			return;
 		}
@@ -171,6 +217,13 @@ class Triggers {
 						trigger.timeout = setTimeout(() => {
 							this.fire(trigger);
 						}, parseInt(condition.value, 10) * 1000);
+						break;
+					case 'chat-opened-by-visitor':
+						if (!this._chatOpened) {
+							break;
+						}
+						this._chatOpened = false;
+						self.fire(trigger);
 						break;
 				}
 			});

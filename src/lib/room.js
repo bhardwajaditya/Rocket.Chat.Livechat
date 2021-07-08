@@ -5,35 +5,93 @@ import { setCookies, upsert, canRenderMessage } from '../components/helpers';
 import { store } from '../store';
 import { normalizeAgent } from './api';
 import Commands from './commands';
+import { handleIdleTimeout } from './idleTimeout';
 import { loadConfig, processUnread } from './main';
 import { parentCall } from './parentCall';
 import { normalizeMessage, normalizeMessages } from './threads';
 import { handleTranscript } from './transcript';
 
 const commands = new Commands();
+export const CLOSE_CHAT = 'Close Chat';
+
+export const onChatClose = async () => {
+	await store.setState({ loading: true });
+	await loadConfig();
+	await store.setState({ alerts: [], composerConfig: { disable: false, disableText: 'Please Wait', onDisabledComposerClick: () => {} } });
+	route('/chat-finished');
+	await store.setState({ loading: false });
+};
 
 export const closeChat = async ({ transcriptRequested } = {}) => {
+	store.setState({ alerts: [] });
 	if (!transcriptRequested) {
 		await handleTranscript();
 	}
-
-	await loadConfig();
 	parentCall('callback', 'chat-ended');
-	route('/chat-finished');
+	store.setState({ composerConfig: {
+		disable: true,
+		disableText: CLOSE_CHAT,
+		onDisabledComposerClick: onChatClose,
+	},
+	});
+};
+
+const disableComposer = (msg) => {
+	const defaultText = 'Please Wait';
+	const result = { disable: false, disableText: defaultText };
+
+	if (!msg) {
+		return result;
+	}
+
+	const { customFields = {}, attachments = [] } = msg;
+
+	if (customFields.disableInput) {
+		return { disable: true, disableText: customFields.disableInputMessage || defaultText };
+	}
+
+	for (let i = 0; i < attachments.length; i++) {
+		const { actions = [] } = attachments[i];
+
+		for (let j = 0; j < actions.length; j++) {
+			const { disableInput, disableInputMessage } = actions[j];
+			if (disableInput) {
+				return { disable: true, disableText: disableInputMessage || defaultText };
+			}
+		}
+	}
+
+	return result;
 };
 
 const processMessage = async (message) => {
 	if (message.t === 'livechat-close') {
 		closeChat(message);
+		handleIdleTimeout({
+			idleTimeoutAction: 'stop',
+		});
 	} else if (message.t === 'command') {
 		commands[message.msg] && commands[message.msg]();
+	}
+
+	const { messages, composerConfig } = store.state;
+	if (messages && messages.length) {
+		const lastMessage = messages[messages.length - 1];
+		if (message._id === lastMessage._id) {
+			const { disable, disableText } = disableComposer(message);
+			if (disable) {
+				store.setState({ composerConfig: { disable: true, disableText, onDisabledComposerClick: () => {} } });
+			} else if (composerConfig && composerConfig.disableText !== CLOSE_CHAT) {
+				store.setState({ composerConfig: { disable: false, disableText: 'Please Wait', onDisabledComposerClick: () => {} } });
+			}
+		}
 	}
 };
 
 const doPlaySound = async (message) => {
 	const { sound, user } = store.state;
 
-	if (!sound.enabled || (user && message.u && message.u._id === user._id)) {
+	if (!sound.enabled || (user && message.u && message.u._id === user._id) || !message.msg) {
 		return;
 	}
 
@@ -137,6 +195,24 @@ Livechat.onMessage(async (message) => {
 		messages: upsert(store.state.messages, message, ({ _id }) => _id === message._id, ({ ts }) => ts),
 	});
 
+	// Viasat : Timeout Warnings
+	if (message.customFields && message.customFields.idleTimeoutConfig) {
+		handleIdleTimeout(message.customFields.idleTimeoutConfig);
+	} else {
+		handleIdleTimeout({
+			idleTimeoutAction: 'stop',
+		});
+	}
+
+	if (message.customFields) {
+		if (message.customFields.sneakPeekEnabled !== undefined || message.customFields.sneakPeekEnabled !== null) {
+			store.setState({ sneakPeekEnabled: message.customFields.sneakPeekEnabled });
+		}
+		if (message.customFields.salesforceAgentName) {
+			store.state.agent.name = message.customFields.salesforceAgentName;
+		}
+	}
+
 	await processMessage(message);
 
 	if (canRenderMessage(message) !== true) {
@@ -154,23 +230,54 @@ Livechat.onMessage(async (message) => {
 export const getGreetingMessages = (messages) => messages && messages.filter((msg) => msg.trigger);
 
 export const loadMessages = async () => {
-	const { messages: storedMessages, room: { _id: rid } = {} } = store.state;
-	const previousMessages = getGreetingMessages(storedMessages);
+	const { room: { _id: rid } = {} } = store.state;
 
 	if (!rid) {
 		return;
 	}
 
 	await store.setState({ loading: true });
-	const rawMessages = (await Livechat.loadMessages(rid)).concat(previousMessages);
-	const messages = (await normalizeMessages(rawMessages)).map(transformAgentInformationOnMessage);
+	let rawMessages = await Livechat.loadMessages(rid);
+	const { messages: storedMessages } = store.state;
+	(storedMessages || []).forEach((message) => {
+		rawMessages = upsert(rawMessages, message, ({ _id }) => _id === message._id, ({ ts }) => ts);
+	});
+	const messages = (await normalizeMessages(rawMessages)).map(transformAgentInformationOnMessage).map((message) => {
+		const oldMessage = storedMessages.find((x) => x._id === message._id);
+		if (oldMessage && oldMessage.actionsVisible !== undefined) {
+			message.actionsVisible = oldMessage.actionsVisible;
+		}
+		return message;
+	});
 
 	await initRoom();
-	await store.setState({ messages: (messages || []).reverse(), noMoreMessages: false, loading: false });
+	await store.setState({ messages: (messages || []).sort((a, b) => new Date(a.ts) - new Date(b.ts)), noMoreMessages: false, loading: false });
 
 	if (messages && messages.length) {
 		const lastMessage = messages[messages.length - 1];
 		await store.setState({ lastReadMessageId: lastMessage && lastMessage._id });
+
+		const { disable, disableText } = disableComposer(lastMessage);
+
+		if (disable) {
+			store.setState({ composerConfig: { disable: true, disableText, onDisabledComposerClick: () => {} } });
+		}
+	}
+
+	const { idleTimeout } = store.state;
+
+	if (idleTimeout && idleTimeout.idleTimeoutRunning) {
+		const {
+			idleTimeoutMessage,
+			idleTimeoutWarningTime,
+			idleTimeoutTimeoutTime,
+		} = idleTimeout;
+		handleIdleTimeout({
+			idleTimeoutAction: 'start',
+			idleTimeoutMessage,
+			idleTimeoutWarningTime,
+			idleTimeoutTimeoutTime,
+		});
 	}
 };
 
@@ -184,7 +291,14 @@ export const loadMoreMessages = async () => {
 	await store.setState({ loading: true });
 
 	const rawMessages = await Livechat.loadMessages(rid, { limit: messages.length + 10 });
-	const moreMessages = (await normalizeMessages(rawMessages)).map(transformAgentInformationOnMessage);
+	const moreMessages = (await normalizeMessages(rawMessages)).map(transformAgentInformationOnMessage).map((message) => {
+		const { _id } = message;
+		const oldMessage = messages.find((x) => x._id === _id);
+		if (oldMessage && oldMessage.actionsVisible !== undefined) {
+			message.actionsVisible = oldMessage.actionsVisible;
+		}
+		return message;
+	});
 
 	await store.setState({
 		messages: (moreMessages || []).reverse(),
@@ -202,6 +316,19 @@ export const defaultRoomParams = () => {
 	}
 
 	return params;
+};
+
+export const assignRoom = async () => {
+	const { room } = store.state;
+
+	if (room) {
+		return;
+	}
+
+	const params = defaultRoomParams();
+	const newRoom = await Livechat.room(params);
+	await store.setState({ room: newRoom });
+	await initRoom();
 };
 
 store.on('change', ([state, prevState]) => {
