@@ -1,6 +1,7 @@
 import { h } from 'preact';
 
 import I18n from '../../../i18n';
+import store from '../../../store';
 import { getAttachmentUrl, memo, normalizeTransferHistoryMessage } from '../../helpers';
 import { AudioAttachment } from '../AudioAttachment';
 import { FileAttachment } from '../FileAttachment';
@@ -14,7 +15,6 @@ import { MessageContent } from '../MessageContent';
 import { MessageText } from '../MessageText';
 import { MessageTime } from '../MessageTime';
 import { VideoAttachment } from '../VideoAttachment';
-import store from '../../../store/';
 import {
 	MESSAGE_TYPE_ROOM_NAME_CHANGED,
 	MESSAGE_TYPE_USER_ADDED,

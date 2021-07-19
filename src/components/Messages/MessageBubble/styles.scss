@@ -88,25 +88,31 @@ $message-bubble-quoted-indicator-color: $color-green;
 		background-color: #dee4e8;
 
 		font-family: 'Source Sans Pro', sans-serif;
-		font-weight: 400;		
+		font-weight: 400;
 	}
+
 	&--myfirst {
 		border-bottom-right-radius: 5px;
 	}
+
 	&--mymid {
 		border-top-right-radius: 5px;
 		border-bottom-right-radius: 5px;
 	}
+
 	&--mylast {
 		border-top-right-radius: 5px;
 	}
+
 	&--yourfirst {
 		border-bottom-left-radius: 5px;
 	}
+
 	&--yourmid {
 		border-top-left-radius: 5px;
 		border-bottom-left-radius: 5px;
 	}
+
 	&--yourlast {
 		border-top-left-radius: 5px;
 	}

@@ -130,7 +130,15 @@ export class MessageList extends MemoizedComponent {
 		resetLastAction,
 	}) => {
 		const items = [];
-
+		const textMessages = messages.reduce((result, message) => {
+			if (message.msg) {
+				result[message._id] = message;
+			}
+			return result;
+		}, {});
+		const textMessageIDs = Object.keys(textMessages);
+		const getPrevTextMessage = (id) => textMessages[textMessageIDs.find((message, index) => textMessageIDs[index + 1] === id)];
+		const getNextTextMessage = (id) => textMessages[textMessageIDs.find((message, index) => textMessageIDs[index - 1] === id)];
 		for (let i = 0; i < messages.length; ++i) {
 			const previousMessage = messages[i - 1];
 			const message = messages[i];
@@ -149,31 +157,28 @@ export class MessageList extends MemoizedComponent {
 
 			const isMyMessage = (msg) => uid && msg?.u && uid === msg?.u._id;
 			const msgSequence = (msg) => {
-				if(message.t) {
-					return;
-				}
+				const previousMessage = getPrevTextMessage(message._id);
+				const nextMessage = getNextTextMessage(message._id);
 
 				let sequence = 'mid';
-
+				console.log(previousMessage);
 				if (isMyMessage(msg)) {
-					if (!isMyMessage(previousMessage)) {
-						sequence = 'first'
+					if (!previousMessage || !isMyMessage(previousMessage) || messages[i - 2]?.t) {
+						sequence = 'first';
+					} else if (!nextMessage || !isMyMessage(nextMessage) || messages[i + 1]?.t) {
+						sequence = 'last';
 					}
-					else if (isMyMessage(previousMessage) && !isMyMessage(nextMessage)) {
-						sequence = 'last'
-					}
-				}
-				else {
-					if (isMyMessage(previousMessage)) {
-						sequence = 'first'
-					}
-					if (!isMyMessage(previousMessage) && (isMyMessage(nextMessage) || !nextMessage)) {
-						sequence = 'last'
+				} else {
+					// eslint-disable-next-line no-lonely-if
+					if (!previousMessage || isMyMessage(previousMessage) || messages[i - 2]?.t) {
+						sequence = 'first';
+					} else if (!nextMessage || isMyMessage(nextMessage) || messages[i + 1]?.t) {
+						sequence = 'last';
 					}
 				}
 
 				return sequence;
-			}
+			};
 
 			isNotEmpty(message) && !shouldHideMessage(message) && items.push(
 				<Message
