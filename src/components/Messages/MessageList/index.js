@@ -161,7 +161,7 @@ export class MessageList extends MemoizedComponent {
 				const nextMessage = getNextTextMessage(message._id);
 
 				let sequence = 'mid';
-				console.log(previousMessage);
+
 				if (isMyMessage(msg)) {
 					if (!previousMessage || !isMyMessage(previousMessage) || messages[i - 2]?.t) {
 						sequence = 'first';
