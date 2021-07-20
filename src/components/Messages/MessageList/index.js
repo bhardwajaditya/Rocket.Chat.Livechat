@@ -7,6 +7,7 @@ import { createClassName, getAttachmentUrl, MemoizedComponent } from '../../help
 import { Message } from '../Message';
 import { MessageSeparator } from '../MessageSeparator';
 import { TypingIndicator } from '../TypingIndicator';
+import { isMyMessage, msgSequence } from './msgSequenceHelper';
 import styles from './styles.scss';
 
 const isNotEmpty = (message) => message && (message.t || message.msg || message.blocks || message.attachments);
@@ -130,15 +131,7 @@ export class MessageList extends MemoizedComponent {
 		resetLastAction,
 	}) => {
 		const items = [];
-		const textMessages = messages.reduce((result, message) => {
-			if (message.msg) {
-				result[message._id] = message;
-			}
-			return result;
-		}, {});
-		const textMessageIDs = Object.keys(textMessages);
-		const getPrevTextMessage = (id) => textMessages[textMessageIDs.find((message, index) => textMessageIDs[index + 1] === id)];
-		const getNextTextMessage = (id) => textMessages[textMessageIDs.find((message, index) => textMessageIDs[index - 1] === id)];
+
 		for (let i = 0; i < messages.length; ++i) {
 			const previousMessage = messages[i - 1];
 			const message = messages[i];
@@ -155,39 +148,14 @@ export class MessageList extends MemoizedComponent {
 				);
 			}
 
-			const isMyMessage = (msg) => uid && msg?.u && uid === msg?.u._id;
-			const msgSequence = (msg) => {
-				const previousMessage = getPrevTextMessage(message._id);
-				const nextMessage = getNextTextMessage(message._id);
-
-				let sequence = 'mid';
-
-				if (isMyMessage(msg)) {
-					if (!previousMessage || !isMyMessage(previousMessage) || messages[i - 2]?.t) {
-						sequence = 'first';
-					} else if (!nextMessage || !isMyMessage(nextMessage) || messages[i + 1]?.t) {
-						sequence = 'last';
-					}
-				} else {
-					// eslint-disable-next-line no-lonely-if
-					if (!previousMessage || isMyMessage(previousMessage) || messages[i - 2]?.t) {
-						sequence = 'first';
-					} else if (!nextMessage || isMyMessage(nextMessage) || messages[i + 1]?.t) {
-						sequence = 'last';
-					}
-				}
-
-				return sequence;
-			};
-
 			isNotEmpty(message) && !shouldHideMessage(message) && items.push(
 				<Message
 					key={message._id}
 					attachmentResolver={attachmentResolver}
 					avatarResolver={avatarResolver}
 					use='li'
-					me={isMyMessage(message)}
-					msgSequence={msgSequence(message)}
+					me={isMyMessage(message, uid)}
+					msgSequence={msgSequence(messages, message, uid, i)}
 					compact={nextMessage && message.u && nextMessage.u && message.u._id === nextMessage.u._id && !nextMessage.t}
 					conversationFinishedText={conversationFinishedText}
 					resetLastAction={resetLastAction}
