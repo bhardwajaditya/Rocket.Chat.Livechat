@@ -155,7 +155,7 @@ export class MessageList extends MemoizedComponent {
 					avatarResolver={avatarResolver}
 					use='li'
 					me={isMyMessage(message, uid)}
-					msgSequence={msgSequence(messages, message, uid, i)}
+					msgSequence={msgSequence(messages, i, uid)}
 					compact={nextMessage && message.u && nextMessage.u && message.u._id === nextMessage.u._id && !nextMessage.t}
 					conversationFinishedText={conversationFinishedText}
 					resetLastAction={resetLastAction}

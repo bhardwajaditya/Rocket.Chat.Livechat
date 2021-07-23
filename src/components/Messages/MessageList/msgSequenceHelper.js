@@ -1,28 +1,34 @@
 const isMyMessage = (message, uid) => uid && message?.u && uid === message?.u._id;
-const msgSequence = (messageList, currentMessage, uid, index) => {
-	const textMessages = messageList.reduce((result, message) => {
-		if (message.msg) {
-			result[message._id] = message;
+const msgSequence = (messageList, index, uid) => {
+	let previousMessage;
+	let nextMessage;
+
+	for (let i = index - 1; i >= 0; i--) {
+		if (messageList?.[i]?.msg || messageList?.[i]?.t) {
+			previousMessage = messageList?.[i];
+			break;
 		}
-		return result;
-	}, {});
-	const textMessageIDs = Object.keys(textMessages);
-	const previousMessage = textMessages[textMessageIDs.find((message, i) => textMessageIDs[i + 1] === currentMessage._id)];
-	const nextMessage = textMessages[textMessageIDs.find((message, i) => textMessageIDs[i - 1] === currentMessage._id)];
+	}
+	for (let i = index + 1; i < messageList.length; i++) {
+		if (messageList?.[i]?.msg || messageList?.[i]?.t) {
+			nextMessage = messageList?.[i];
+			break;
+		}
+	}
 
 	let sequence = 'mid';
 
-	if (isMyMessage(currentMessage, uid)) {
-		if (!previousMessage || !isMyMessage(previousMessage, uid) || messageList[index - 2]?.t) {
+	if (isMyMessage(messageList[index], uid)) {
+		if (!previousMessage || !isMyMessage(previousMessage, uid) || previousMessage?.t) {
 			sequence = 'first';
-		} else if (!nextMessage || !isMyMessage(nextMessage, uid) || messageList[index + 1]?.t) {
+		} else if (!nextMessage || !isMyMessage(nextMessage, uid) || nextMessage?.t) {
 			sequence = 'last';
 		}
 	} else {
 		// eslint-disable-next-line no-lonely-if
-		if (!previousMessage || isMyMessage(previousMessage, uid) || messageList[index - 2]?.t) {
+		if (!previousMessage || isMyMessage(previousMessage, uid) || previousMessage?.t) {
 			sequence = 'first';
-		} else if (!nextMessage || isMyMessage(nextMessage, uid) || messageList[index + 1]?.t) {
+		} else if (!nextMessage || isMyMessage(nextMessage, uid) || nextMessage?.t) {
 			sequence = 'last';
 		}
 	}
