@@ -27,12 +27,7 @@ export const closeChat = async ({ transcriptRequested } = {}) => {
 	if (!transcriptRequested) {
 		await handleTranscript();
 	}
-	parentCall('callback', 'chat-ended');
-	await store.setState({ loading: true });
-	await loadConfig();
-	await store.setState({ alerts: [], composerConfig: { disable: false, disableText: 'Please Wait', onDisabledComposerClick: () => {} } });
-	route('/chat-finished');
-	await store.setState({ loading: false });
+	onChatClose();
 };
 
 const disableComposer = (msg) => {
