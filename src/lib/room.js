@@ -28,12 +28,11 @@ export const closeChat = async ({ transcriptRequested } = {}) => {
 		await handleTranscript();
 	}
 	parentCall('callback', 'chat-ended');
-	store.setState({ composerConfig: {
-		disable: true,
-		disableText: CLOSE_CHAT,
-		onDisabledComposerClick: onChatClose,
-	},
-	});
+	await store.setState({ loading: true });
+	await loadConfig();
+	await store.setState({ alerts: [], composerConfig: { disable: false, disableText: 'Please Wait', onDisabledComposerClick: () => {} } });
+	route('/chat-finished');
+	await store.setState({ loading: false });
 };
 
 const disableComposer = (msg) => {
