@@ -1,6 +1,7 @@
 import { h } from 'preact';
 
 import I18n from '../../../i18n';
+import store from '../../../store';
 import { getAttachmentUrl, memo, normalizeTransferHistoryMessage } from '../../helpers';
 import { AudioAttachment } from '../AudioAttachment';
 import { FileAttachment } from '../FileAttachment';
@@ -31,6 +32,7 @@ const renderContent = ({
 	system,
 	quoted,
 	me,
+	msgSequence,
 	blocks,
 	attachments,
 	attachmentResolver,
@@ -76,7 +78,7 @@ const renderContent = ({
 				/>),
 		),
 	text && (
-		<MessageBubble inverse={me} quoted={quoted} system={system}>
+		<MessageBubble inverse={me} msgSequence={msgSequence} quoted={quoted} system={system}>
 			<MessageText text={text} system={system} />
 		</MessageBubble>
 	),
@@ -128,6 +130,7 @@ export const Message = memo(({
 	use,
 	ts,
 	me,
+	msgSequence,
 	compact,
 	className,
 	style = {},
@@ -143,7 +146,7 @@ export const Message = memo(({
 		style={style}
 		system={!!message.t}
 	>
-		{!message.t && <MessageAvatars
+		{store.state.config.settings.livechat_enable_avatar && !message.t && <MessageAvatars
 			avatarResolver={avatarResolver}
 			usernames={getMessageUsernames(compact, message)}
 			isVisitor={me}
@@ -154,6 +157,7 @@ export const Message = memo(({
 				text: message.t ? getSystemMessageText(message) : message.msg,
 				system: !!message.t,
 				me,
+				msgSequence,
 				attachments: message.attachments,
 				blocks: message.blocks,
 				mid: message._id,

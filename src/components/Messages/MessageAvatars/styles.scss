@@ -2,8 +2,9 @@
 	display: flex;
 
 	min-width: 32px;
+	margin-bottom: 1px;
 	padding: 0 5px;
-	align-self: end;
+	align-self: flex-end;
 	flex-flow: row nowrap;
 
 	&__avatar {
