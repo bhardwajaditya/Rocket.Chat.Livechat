@@ -15,6 +15,7 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 		idleTimeoutMessage,
 		idleTimeoutWarningTime,
 		idleTimeoutTimeoutTime,
+		idleTimeoutHandler,
 	} = idleTimeoutConfig;
 
 	let warningTimer;
@@ -101,7 +102,7 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 			// Update warning
 			showWarning(countDown);
 
-			if (countDown === 0) {
+			if (countDown === 0 && idleTimeoutHandler === 'widget') {
 				clearInterval(timeoutTimer);
 				hideWarning();
 				onTimeout();

@@ -271,12 +271,14 @@ export const loadMessages = async () => {
 			idleTimeoutMessage,
 			idleTimeoutWarningTime,
 			idleTimeoutTimeoutTime,
+			idleTimeoutHandler,
 		} = idleTimeout;
 		handleIdleTimeout({
 			idleTimeoutAction: 'start',
 			idleTimeoutMessage,
 			idleTimeoutWarningTime,
 			idleTimeoutTimeoutTime,
+			idleTimeoutHandler,
 		});
 	}
 };
