@@ -7,6 +7,7 @@ import { createClassName, getAttachmentUrl, MemoizedComponent } from '../../help
 import { Message } from '../Message';
 import { MessageSeparator } from '../MessageSeparator';
 import { TypingIndicator } from '../TypingIndicator';
+import { isMyMessage, msgSequence } from './msgSequenceHelper';
 import styles from './styles.scss';
 
 const isNotEmpty = (message) => message && (message.t || message.msg || message.blocks || message.attachments);
@@ -147,14 +148,14 @@ export class MessageList extends MemoizedComponent {
 				);
 			}
 
-
 			isNotEmpty(message) && !shouldHideMessage(message) && items.push(
 				<Message
 					key={message._id}
 					attachmentResolver={attachmentResolver}
 					avatarResolver={avatarResolver}
 					use='li'
-					me={uid && message.u && uid === message.u._id}
+					me={isMyMessage(message, uid)}
+					msgSequence={msgSequence(messages, i, uid)}
 					compact={nextMessage && message.u && nextMessage.u && message.u._id === nextMessage.u._id && !nextMessage.t}
 					conversationFinishedText={conversationFinishedText}
 					resetLastAction={resetLastAction}
