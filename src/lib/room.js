@@ -27,6 +27,21 @@ export const closeChat = async ({ transcriptRequested } = {}) => {
 	if (!transcriptRequested) {
 		await handleTranscript();
 	}
+	parentCall('callback', 'chat-ended');
+	store.setState({ composerConfig: {
+		disable: true,
+		disableText: CLOSE_CHAT,
+		onDisabledComposerClick: onChatClose,
+	},
+	});
+};
+
+export const closeChatFromModal = async ({ transcriptRequested } = {}) => {
+	store.setState({ alerts: [] });
+	if (!transcriptRequested) {
+		await handleTranscript();
+	}
+	parentCall('callback', 'chat-ended');
 	onChatClose();
 };
 
@@ -265,12 +280,14 @@ export const loadMessages = async () => {
 			idleTimeoutMessage,
 			idleTimeoutWarningTime,
 			idleTimeoutTimeoutTime,
+			idleTimeoutHandler,
 		} = idleTimeout;
 		handleIdleTimeout({
 			idleTimeoutAction: 'start',
 			idleTimeoutMessage,
 			idleTimeoutWarningTime,
 			idleTimeoutTimeoutTime,
+			idleTimeoutHandler,
 		});
 	}
 };
