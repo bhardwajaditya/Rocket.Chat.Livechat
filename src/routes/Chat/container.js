@@ -9,7 +9,7 @@ import { normalizeQueueAlert } from '../../lib/api';
 import constants from '../../lib/constants';
 import { loadConfig } from '../../lib/main';
 import { parentCall, runCallbackEventEmitter } from '../../lib/parentCall';
-import { initRoom, closeChat, loadMessages, loadMoreMessages, defaultRoomParams, getGreetingMessages, onChatClose, CLOSE_CHAT } from '../../lib/room';
+import { initRoom, closeChatFromModal, loadMessages, loadMoreMessages, defaultRoomParams, getGreetingMessages, onChatClose, CLOSE_CHAT } from '../../lib/room';
 import triggers from '../../lib/triggers';
 import store, { Consumer } from '../../store';
 import Chat from './component';
@@ -232,7 +232,7 @@ export class ChatContainer extends Component {
 			await dispatch({ alerts: (alerts.push(alert), alerts) });
 		} finally {
 			await dispatch({ loading: false });
-			await closeChat();
+			await closeChatFromModal();
 		}
 	}
 
