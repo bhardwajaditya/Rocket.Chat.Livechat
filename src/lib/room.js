@@ -36,6 +36,16 @@ export const closeChat = async ({ transcriptRequested } = {}) => {
 	});
 };
 
+export const closeChatFromModal = async ({ transcriptRequested } = {}) => {
+	store.setState({ alerts: [] });
+	if (!transcriptRequested) {
+		await handleTranscript();
+	}
+	parentCall('callback', 'chat-ended');
+	onChatClose();
+};
+
+
 const disableComposer = (msg) => {
 	const defaultText = 'Please Wait';
 	const result = { disable: false, disableText: defaultText };

@@ -39,7 +39,7 @@ $message-bubble-quoted-indicator-color: $color-green;
 
 	&--inverse {
 		color: var(--font-color, $message-bubble-me-color);
-		background-color: var(--color, $message-bubble-me-background-color);
+		background-color: var(--color, $message-bubble-me-background-color) !important;
 
 		a {
 			color: var(--font-color, $message-bubble-me-link-color);
@@ -49,7 +49,7 @@ $message-bubble-quoted-indicator-color: $color-green;
 	&--nude {
 		padding: $message-bubble-nude-padding;
 
-		background-color: transparent;
+		background-color: transparent !important;
 	}
 
 	&--quoted {
@@ -71,10 +71,49 @@ $message-bubble-quoted-indicator-color: $color-green;
 	&--system {
 		text-align: center;
 
-		background-color: transparent;
+		background-color: transparent !important;
 
 		.message-container {
 			justify-content: center;
 		}
+	}
+
+	&--friendlyChat {
+		overflow: hidden;
+
+		width: fit-content;
+		margin-top: 2px;
+
+		border-radius: 20px;
+		background-color: #dee4e8;
+
+		font-family: 'Source Sans Pro', sans-serif;
+		font-weight: 400;
+	}
+
+	&--myfirst {
+		border-bottom-right-radius: 5px;
+	}
+
+	&--mymid {
+		border-top-right-radius: 5px;
+		border-bottom-right-radius: 5px;
+	}
+
+	&--mylast {
+		border-top-right-radius: 5px;
+	}
+
+	&--yourfirst {
+		border-bottom-left-radius: 5px;
+	}
+
+	&--yourmid {
+		border-top-left-radius: 5px;
+		border-bottom-left-radius: 5px;
+	}
+
+	&--yourlast {
+		border-top-left-radius: 5px;
 	}
 }
