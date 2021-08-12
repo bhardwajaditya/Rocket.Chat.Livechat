@@ -161,9 +161,9 @@ class Triggers {
 					store.setState({ minimized: false });
 				});
 			} else if (action.name === 'start-session') {
+				store.setState({ composerConfig: { disable: true, disableText: 'Starting chat...' } });
 				registerGuestAndCreateSession(action).then(() => {
 					store.setState({ triggered: true });
-					store.setState({ composerConfig: { disable: true, disableText: 'Starting chat...' } });
 				});
 			}
 		});

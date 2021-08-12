@@ -84,17 +84,12 @@ const processMessage = async (message) => {
 		commands[message.msg] && commands[message.msg]();
 	}
 
-	const { messages, composerConfig } = store.state;
-	if (messages && messages.length) {
-		const lastMessage = messages[messages.length - 1];
-		if (message._id === lastMessage._id) {
-			const { disable, disableText } = disableComposer(message);
-			if (disable) {
-				store.setState({ composerConfig: { disable: true, disableText, onDisabledComposerClick: () => {} } });
-			} else if (composerConfig && composerConfig.disableText !== CLOSE_CHAT) {
-				store.setState({ composerConfig: { disable: false, disableText: 'Please Wait', onDisabledComposerClick: () => {} } });
-			}
-		}
+	const { composerConfig } = store.state;
+	const { disable, disableText } = disableComposer(message);
+	if (disable) {
+		store.setState({ composerConfig: { disable: true, disableText, onDisabledComposerClick: () => {} } });
+	} else if (composerConfig && composerConfig.disableText !== CLOSE_CHAT) {
+		store.setState({ composerConfig: { disable: false, disableText: 'Please Wait', onDisabledComposerClick: () => {} } });
 	}
 };
 
@@ -257,6 +252,7 @@ export const loadMessages = async () => {
 		if (oldMessage && oldMessage.actionsVisible !== undefined) {
 			message.actionsVisible = oldMessage.actionsVisible;
 		}
+		processMessage(message);
 		return message;
 	});
 
@@ -307,6 +303,7 @@ export const loadMoreMessages = async () => {
 		if (oldMessage && oldMessage.actionsVisible !== undefined) {
 			message.actionsVisible = oldMessage.actionsVisible;
 		}
+		processMessage(message);
 		return message;
 	});
 
