@@ -74,6 +74,16 @@ const disableComposer = (msg) => {
 	return result;
 };
 
+const handleComposerOnMessage = async (message) => {
+	const { composerConfig } = store.state;
+	const { disable, disableText } = disableComposer(message);
+	if (disable) {
+		await store.setState({ composerConfig: { disable: true, disableText, onDisabledComposerClick: () => {} } });
+	} else if (composerConfig && composerConfig.disableText !== CLOSE_CHAT) {
+		await store.setState({ composerConfig: { disable: false, disableText: 'Please Wait', onDisabledComposerClick: () => {} } });
+	}
+};
+
 const processMessage = async (message) => {
 	if (message.t === 'livechat-close') {
 		closeChat(message);
@@ -84,13 +94,7 @@ const processMessage = async (message) => {
 		commands[message.msg] && commands[message.msg]();
 	}
 
-	const { composerConfig } = store.state;
-	const { disable, disableText } = disableComposer(message);
-	if (disable) {
-		store.setState({ composerConfig: { disable: true, disableText, onDisabledComposerClick: () => {} } });
-	} else if (composerConfig && composerConfig.disableText !== CLOSE_CHAT) {
-		store.setState({ composerConfig: { disable: false, disableText: 'Please Wait', onDisabledComposerClick: () => {} } });
-	}
+	handleComposerOnMessage(message);
 };
 
 const doPlaySound = async (message) => {
@@ -243,6 +247,7 @@ export const loadMessages = async () => {
 
 	await store.setState({ loading: true });
 	let rawMessages = await Livechat.loadMessages(rid);
+	rawMessages = rawMessages?.reverse();
 	const { messages: storedMessages } = store.state;
 	(storedMessages || []).forEach((message) => {
 		rawMessages = upsert(rawMessages, message, ({ _id }) => _id === message._id, ({ ts }) => ts);
@@ -252,7 +257,7 @@ export const loadMessages = async () => {
 		if (oldMessage && oldMessage.actionsVisible !== undefined) {
 			message.actionsVisible = oldMessage.actionsVisible;
 		}
-		processMessage(message);
+		handleComposerOnMessage(message);
 		return message;
 	});
 
@@ -296,14 +301,15 @@ export const loadMoreMessages = async () => {
 
 	await store.setState({ loading: true });
 
-	const rawMessages = await Livechat.loadMessages(rid, { limit: messages.length + 10 });
+	let rawMessages = await Livechat.loadMessages(rid, { limit: messages.length + 10 });
+	rawMessages = rawMessages?.reverse();
 	const moreMessages = (await normalizeMessages(rawMessages)).map(transformAgentInformationOnMessage).map((message) => {
 		const { _id } = message;
 		const oldMessage = messages.find((x) => x._id === _id);
 		if (oldMessage && oldMessage.actionsVisible !== undefined) {
 			message.actionsVisible = oldMessage.actionsVisible;
 		}
-		processMessage(message);
+		handleComposerOnMessage(message);
 		return message;
 	});
 
