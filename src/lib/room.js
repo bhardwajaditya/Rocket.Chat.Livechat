@@ -247,7 +247,6 @@ export const loadMessages = async () => {
 
 	await store.setState({ loading: true });
 	let rawMessages = await Livechat.loadMessages(rid);
-	rawMessages = rawMessages?.reverse();
 	const { messages: storedMessages } = store.state;
 	(storedMessages || []).forEach((message) => {
 		rawMessages = upsert(rawMessages, message, ({ _id }) => _id === message._id, ({ ts }) => ts);
@@ -301,8 +300,7 @@ export const loadMoreMessages = async () => {
 
 	await store.setState({ loading: true });
 
-	let rawMessages = await Livechat.loadMessages(rid, { limit: messages.length + 10 });
-	rawMessages = rawMessages?.reverse();
+	const rawMessages = await Livechat.loadMessages(rid, { limit: messages.length + 10 });
 	const moreMessages = (await normalizeMessages(rawMessages)).map(transformAgentInformationOnMessage).map((message) => {
 		const { _id } = message;
 		const oldMessage = messages.find((x) => x._id === _id);
