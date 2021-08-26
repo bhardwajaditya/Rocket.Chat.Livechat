@@ -245,7 +245,6 @@ Livechat.onMessage(async (message) => {
 export const getGreetingMessages = (messages) => messages && messages.filter((msg) => msg.trigger);
 
 export const loadMessages = async () => {
-	console.log('load message called');
 	const { room: { _id: rid } = {} } = store.state;
 
 	if (!rid) {
