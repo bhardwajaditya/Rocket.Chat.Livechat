@@ -17,7 +17,7 @@ export const CLOSE_CHAT = 'Close Chat';
 export const onChatClose = async () => {
 	await store.setState({ loading: true });
 	await loadConfig();
-	await store.setState({ alerts: [], composerConfig: { disable: false, disableText: 'Please Wait', onDisabledComposerClick: () => {} } });
+	await store.setState({ alerts: [], chatClosed: false, composerConfig: { disable: false, disableText: 'Please Wait', onDisabledComposerClick: () => {} } });
 	route('/chat-finished');
 	await store.setState({ loading: false });
 };
@@ -33,6 +33,7 @@ export const closeChat = async ({ transcriptRequested } = {}) => {
 		disableText: CLOSE_CHAT,
 		onDisabledComposerClick: onChatClose,
 	},
+	chatClosed: true,
 	});
 };
 
@@ -75,8 +76,13 @@ const disableComposer = (msg) => {
 };
 
 const handleComposerOnMessage = async (message) => {
-	const { composerConfig } = store.state;
+	const { composerConfig, chatClosed } = store.state;
 	const { disable, disableText } = disableComposer(message);
+
+	if (chatClosed || message.t === 'livechat-started' || message.t === 'livechat-close' || message.t === 'command') {
+		return;
+	}
+
 	if (disable) {
 		await store.setState({ composerConfig: { disable: true, disableText, onDisabledComposerClick: () => {} } });
 	} else if (composerConfig && composerConfig.disableText !== CLOSE_CHAT) {
@@ -239,6 +245,7 @@ Livechat.onMessage(async (message) => {
 export const getGreetingMessages = (messages) => messages && messages.filter((msg) => msg.trigger);
 
 export const loadMessages = async () => {
+	console.log('load message called');
 	const { room: { _id: rid } = {} } = store.state;
 
 	if (!rid) {
