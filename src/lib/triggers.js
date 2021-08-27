@@ -19,6 +19,7 @@ const registerGuestAndCreateSession = async (triggerAction) => {
 	}
 
 	store.setState({ loading: true });
+	store.setState({ chatClosed: false, composerConfig: { disable: true, disableText: 'Starting chat...' } });
 	try {
 		const { params } = triggerAction;
 		const guest = { token: token || createToken(), department: params && params.department };
@@ -160,7 +161,6 @@ class Triggers {
 					store.setState({ minimized: false });
 				});
 			} else if (action.name === 'start-session') {
-				store.setState({ composerConfig: { disable: true, disableText: 'Starting chat...' } });
 				registerGuestAndCreateSession(action).then(() => {
 					store.setState({ triggered: true });
 				});
