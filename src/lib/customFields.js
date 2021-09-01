@@ -7,6 +7,7 @@ class CustomFields {
 			this._initiated = false;
 			this._started = false;
 			this._queue = {};
+			this._callback = () => { };
 			CustomFields.instance = this;
 		}
 
@@ -32,7 +33,7 @@ class CustomFields {
 		store.off('change', this.handleStoreChange);
 	}
 
-	handleStoreChange([state]) {
+	async handleStoreChange([state]) {
 		const { user } = state;
 		const { _started } = CustomFields.instance;
 
@@ -45,26 +46,33 @@ class CustomFields {
 		}
 
 		CustomFields.instance._started = true;
-		CustomFields.instance.processCustomFields();
+		await CustomFields.instance.processCustomFields();
 	}
 
-	processCustomFields() {
-		Object.keys(this._queue).forEach((key) => {
+	async processCustomFields() {
+		Object.keys(this._queue).forEach(async (key, index, array) => {
 			const { value, overwrite } = this._queue[key];
-			this.setCustomField(key, value, overwrite);
+			await this.setCustomField(key, value, overwrite);
+			if (index === array.length - 1) {
+				CustomFields.instance._callback();
+			}
 		});
 
 		this._queue = {};
 	}
 
-	setCustomField(key, value, overwrite = true) {
+	async setCustomField(key, value, overwrite = true) {
 		if (!this._started) {
 			this._queue[key] = { value, overwrite };
 			return;
 		}
 
 		const { token } = Livechat.credentials;
-		Livechat.sendCustomField({ token, key, value, overwrite });
+		await Livechat.sendCustomField({ token, key, value, overwrite });
+	}
+
+	setOnCustomFieldsUpdated(callback) {
+		this._callback = callback || (() => { });
 	}
 }
 
