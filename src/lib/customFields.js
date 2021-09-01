@@ -30,6 +30,7 @@ class CustomFields {
 		this._initiated = false;
 		this._started = false;
 		this._queue = {};
+		this._callback = () => { };
 		store.off('change', this.handleStoreChange);
 	}
 
