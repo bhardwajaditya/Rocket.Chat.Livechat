@@ -5,6 +5,7 @@ import { upsert, createToken, asyncForEach } from '../components/helpers';
 import I18n from '../i18n';
 import store from '../store';
 import { normalizeAgent } from './api';
+import CustomFields from './customFields';
 import { processUnread } from './main';
 import { parentCall, runCallbackEventEmitter } from './parentCall';
 import { assignRoom } from './room';
@@ -18,6 +19,11 @@ const registerGuestAndCreateSession = async (triggerAction) => {
 		return room;
 	}
 
+	const startChat = async () => {
+		await assignRoom();
+		parentCall('callback', 'chat-started');
+	};
+
 	store.setState({ loading: true });
 	store.setState({ chatClosed: false, composerConfig: { disable: true, disableText: 'Starting chat...' } });
 	try {
@@ -25,10 +31,13 @@ const registerGuestAndCreateSession = async (triggerAction) => {
 		const guest = { token: token || createToken(), department: params && params.department };
 		store.setState(guest);
 		const user = await Livechat.grantVisitor({ visitor: { ...guest } });
-		store.setState({ user });
-		await assignRoom();
 
-		parentCall('callback', 'chat-started');
+		if (store.state.user) {
+			startChat();
+		} else {
+			CustomFields.setOnCustomFieldsUpdated(startChat);
+		}
+		store.setState({ user });
 	} catch (error) {
 		const { data: { error: reason } } = error;
 		const alert = { id: createToken(), children: I18n.t('Error starting a new conversation: %{reason}', { reason }), error: true, timeout: 10000 };
