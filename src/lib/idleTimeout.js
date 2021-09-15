@@ -19,7 +19,11 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 
 	let warningTimer;
 	let timeoutTimer;
-	const { idleTimeout } = store.state;
+	const { idleTimeout, chatClosed } = store.state;
+
+	if (chatClosed) {
+		return;
+	}
 
 	if (idleTimeoutAction === 'stop' && (idleTimeout && !idleTimeout.idleTimeoutRunning)) {
 		return;
