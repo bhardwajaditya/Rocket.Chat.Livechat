@@ -71,6 +71,7 @@ export class ChatContainer extends Component {
 
 		await dispatch({ loading: true });
 		await dispatch({ composerConfig: { disable: true, disableText: 'Starting chat...' } });
+		console.error('Room not found on user input, sending a new room creation request');
 		try {
 			const params = defaultRoomParams();
 			const newRoom = await Livechat.room(params);
