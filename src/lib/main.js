@@ -10,6 +10,7 @@ import constants from './constants';
 export const loadConfig = async () => {
 	const {
 		token,
+		composerConfig = null,
 	} = store.state;
 
 	Livechat.credentials.token = token;
@@ -35,7 +36,7 @@ export const loadConfig = async () => {
 		noMoreMessages: false,
 		visible: true,
 		unread: null,
-		composerConfig: null,
+		composerConfig,
 	});
 };
 
