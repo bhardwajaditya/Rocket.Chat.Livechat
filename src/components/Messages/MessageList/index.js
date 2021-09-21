@@ -2,12 +2,29 @@ import { parseISO } from 'date-fns/fp';
 import isSameDay from 'date-fns/isSameDay';
 import { h } from 'preact';
 
+import store from '../../../store';
 import { createClassName, getAttachmentUrl, MemoizedComponent } from '../../helpers';
 import { Message } from '../Message';
 import { MessageSeparator } from '../MessageSeparator';
 import { TypingIndicator } from '../TypingIndicator';
+import { isMyMessage, msgSequence } from './msgSequenceHelper';
 import styles from './styles.scss';
 
+const isNotEmpty = (message) => message && (message.t || message.msg || message.blocks || message.attachments);
+
+const shouldHideMessage = (message) => {
+	const { config: { settings: { hideSysMessages } } } = store.state;
+	if (!message.t) {
+		return false;
+	}
+	if (hideSysMessages === [] || !hideSysMessages) {
+		return false;
+	}
+	if (hideSysMessages.indexOf(message.t) !== -1) {
+		return true;
+	}
+	return false;
+};
 
 export class MessageList extends MemoizedComponent {
 	static defaultProps = {
@@ -85,6 +102,13 @@ export class MessageList extends MemoizedComponent {
 			}
 			delete this.previousScrollHeight;
 		}
+
+		// when scrollPosition is "free", scroll to bottom
+		if (this.scrollPosition === MessageList.SCROLL_FREE) {
+			this.base.scrollTop = this.base.scrollHeight;
+			const { onScrollTo } = this.props;
+			onScrollTo && onScrollTo(MessageList.SCROLL_AT_BOTTOM);
+		}
 	}
 
 	componentDidMount() {
@@ -102,8 +126,9 @@ export class MessageList extends MemoizedComponent {
 		messages,
 		lastReadMessageId,
 		uid,
-		conversationFinishedMessage,
+		conversationFinishedText,
 		typingUsernames,
+		resetLastAction,
 	}) => {
 		const items = [];
 
@@ -123,15 +148,17 @@ export class MessageList extends MemoizedComponent {
 				);
 			}
 
-			items.push(
+			isNotEmpty(message) && !shouldHideMessage(message) && items.push(
 				<Message
 					key={message._id}
 					attachmentResolver={attachmentResolver}
 					avatarResolver={avatarResolver}
 					use='li'
-					me={uid && message.u && uid === message.u._id}
+					me={isMyMessage(message, uid)}
+					msgSequence={msgSequence(messages, i, uid)}
 					compact={nextMessage && message.u && nextMessage.u && message.u._id === nextMessage.u._id && !nextMessage.t}
-					conversationFinishedMessage={conversationFinishedMessage}
+					conversationFinishedText={conversationFinishedText}
+					resetLastAction={resetLastAction}
 					{...message}
 				/>,
 			);

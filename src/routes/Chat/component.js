@@ -3,7 +3,7 @@ import { h, Component } from 'preact';
 
 import { Button } from '../../components/Button';
 import { Composer, ComposerAction, ComposerActions } from '../../components/Composer';
-import { FilesDropTarget } from '../../components/FilesDropTarget';
+import { FilesDropTargetWrapper } from '../../components/FilesDropTarget';
 import { FooterOptions, CharCounter } from '../../components/Footer';
 import { Menu } from '../../components/Menu';
 import { MessageList } from '../../components/Messages';
@@ -13,9 +13,10 @@ import I18n from '../../i18n';
 import ChangeIcon from '../../icons/change.svg';
 import FinishIcon from '../../icons/finish.svg';
 import PlusIcon from '../../icons/plus.svg';
+import PrintIcon from '../../icons/print.svg';
 import RemoveIcon from '../../icons/remove.svg';
 import SendIcon from '../../icons/send.svg';
-import EmojiIcon from '../../icons/smile.svg';
+// import EmojiIcon from '../../icons/smile.svg';
 import styles from './styles.scss';
 
 export default class Chat extends Component {
@@ -51,11 +52,19 @@ export default class Chat extends Component {
 
 	handleUploadClick = (event) => {
 		event.preventDefault();
+		const { disable } = this.state;
+		if (disable) {
+			return;
+		}
 		this.filesDropTarget.browse();
 	}
 
 	handleSendClick = (event) => {
 		event.preventDefault();
+		const { disable } = this.state;
+		if (disable) {
+			return;
+		}
 		this.handleSubmit(this.state.text);
 	}
 
@@ -104,7 +113,7 @@ export default class Chat extends Component {
 		agent,
 		typingUsernames,
 		avatarResolver,
-		conversationFinishedMessage,
+		conversationFinishedText,
 		loading,
 		onUpload,
 		messages,
@@ -113,11 +122,15 @@ export default class Chat extends Component {
 		onChangeDepartment,
 		onFinishChat,
 		onRemoveUserData,
+		onPrintTranscript,
 		lastReadMessageId,
 		queueInfo,
 		registrationRequired,
 		onRegisterUser,
 		limitTextLength,
+		resetLastAction,
+		composerConfig,
+		livechat_kill_switch,
 		...props
 	}, {
 		atBottom = true,
@@ -130,6 +143,7 @@ export default class Chat extends Component {
 			agent={agent || null}
 			queueInfo={queueInfo}
 			nopadding
+			options={options}
 			onChangeDepartment={onChangeDepartment}
 			onFinishChat={onFinishChat}
 			onRemoveUserData={onRemoveUserData}
@@ -137,23 +151,25 @@ export default class Chat extends Component {
 			handleEmojiClick={this.handleEmojiClick}
 			{...props}
 		>
-			<FilesDropTarget
+			<FilesDropTargetWrapper
+				isEnabled={uploads}
 				ref={this.handleFilesDropTargetRef}
 				overlayed
 				overlayText={I18n.t('Drop here to upload a file')}
 				onUpload={onUpload}
 			>
 				<Screen.Content nopadding>
-					<div className={createClassName(styles, 'chat__messages', { atBottom, loading })}>
+					<div id={'chat__messages'} className={createClassName(styles, 'chat__messages', { atBottom, loading })}>
 						<MessageList
 							ref={this.handleMessagesContainerRef}
 							avatarResolver={avatarResolver}
 							uid={uid}
 							messages={messages}
 							typingUsernames={typingUsernames}
-							conversationFinishedMessage={conversationFinishedMessage}
+							conversationFinishedText={conversationFinishedText}
 							lastReadMessageId={lastReadMessageId}
 							onScrollTo={this.handleScrollTo}
+							resetLastAction={resetLastAction}
 							handleEmojiClick={this.handleEmojiClick}
 						/>
 						{this.state.emojiPickerActive && <Picker
@@ -166,63 +182,72 @@ export default class Chat extends Component {
 						/>}
 					</div>
 				</Screen.Content>
-				<Screen.Footer
-					options={options ? (
-						<FooterOptions>
-							<Menu.Group>
-								{onChangeDepartment && (
-									<Menu.Item onClick={onChangeDepartment} icon={ChangeIcon}>{I18n.t('Change department')}</Menu.Item>
-								)}
-								{onRemoveUserData && (
-									<Menu.Item onClick={onRemoveUserData} icon={RemoveIcon}>{I18n.t('Forget/Remove my data')}</Menu.Item>
-								)}
-								{onFinishChat && (
-									<Menu.Item danger onClick={onFinishChat} icon={FinishIcon}>{I18n.t('Finish this chat')}</Menu.Item>
-								)}
-							</Menu.Group>
-						</FooterOptions>
-					) : null}
-					limit={limitTextLength
-						? <CharCounter
-							limitTextLength={limitTextLength}
-							textLength={text.length}
-						/> : null}
-				>
-					{ registrationRequired
-						? <Button loading={loading} disabled={loading} onClick={onRegisterUser} stack>{I18n.t('Chat now')}</Button>
-						: <Composer onUpload={onUpload}
-							onSubmit={this.handleSubmit}
-							onChange={this.handleChangeText}
-							placeholder={I18n.t('Type your message here')}
-							value={text}
-							notifyEmojiSelect={(click) => { this.notifyEmojiSelect = click; }}
-							handleEmojiClick={this.handleEmojiClick}
-							pre={(
-								<ComposerActions>
-									<ComposerAction className={createClassName(styles, 'emoji-picker-icon')} onClick={this.toggleEmojiPickerState}>
-										<EmojiIcon width={20} height={20} />
-									</ComposerAction>
-								</ComposerActions>
-							)}
-							post={(
-								<ComposerActions>
-									{text.length === 0 && uploads && (
-										<ComposerAction onClick={this.handleUploadClick}>
-											<PlusIcon width={20} height={20} />
-										</ComposerAction>
+				{ !livechat_kill_switch ? (
+					<Screen.Footer
+						options={options ? (
+							<FooterOptions>
+								<Menu.Group>
+									{onPrintTranscript && (
+										<Menu.Item onClick={onPrintTranscript} icon={PrintIcon}>{I18n.t('Print Chat')}</Menu.Item>
 									)}
-									{text.length > 0 && (
-										<ComposerAction onClick={this.handleSendClick}>
-											<SendIcon width={20} height={20} />
-										</ComposerAction>
+									{onChangeDepartment && (
+										<Menu.Item onClick={onChangeDepartment} icon={ChangeIcon}>{I18n.t('Change department')}</Menu.Item>
 									)}
-								</ComposerActions>
-							)}
-							limitTextLength={limitTextLength}
-						/>
-					}
-				</Screen.Footer>
-			</FilesDropTarget>
+									{onRemoveUserData && (
+										<Menu.Item onClick={onRemoveUserData} icon={RemoveIcon}>{I18n.t('Forget/Remove my data')}</Menu.Item>
+									)}
+									{onFinishChat && (
+										<Menu.Item danger onClick={onFinishChat} icon={FinishIcon}>{I18n.t('Finish this chat')}</Menu.Item>
+									)}
+								</Menu.Group>
+							</FooterOptions>
+						) : null}
+						limit={limitTextLength
+							? <CharCounter
+								limitTextLength={limitTextLength}
+								textLength={text.length}
+							/> : null}
+					>
+						{ registrationRequired
+							&& <Button loading={loading} disabled={loading} onClick={onRegisterUser} stack>{I18n.t('Chat now')}</Button>
+						}
+						{ !registrationRequired && composerConfig && composerConfig.disable
+							? <Button onClick={composerConfig.onDisabledComposerClick} style={{ width: '100%' }}> {composerConfig.disableText} </Button>
+							: <Composer onUpload={onUpload}
+								onSubmit={this.handleSubmit}
+								onChange={this.handleChangeText}
+								placeholder={I18n.t('Type your message here')}
+								value={text}
+								notifyEmojiSelect={(click) => { this.notifyEmojiSelect = click; }}
+								handleEmojiClick={this.handleEmojiClick}
+								// Viasat : Hide Emoticon pallet
+								//
+								// pre={(
+								// 	<ComposerActions>
+								// 		<ComposerAction className={createClassName(styles, 'emoji-picker-icon')} onClick={this.toggleEmojiPickerState}>
+								// 			<EmojiIcon width={20} height={20} />
+								// 		</ComposerAction>
+								// 	</ComposerActions>
+								// )}
+								post={(
+									<ComposerActions>
+										{text.length === 0 && uploads && (
+											<ComposerAction onClick={this.handleUploadClick}>
+												<PlusIcon width={20} height={20} />
+											</ComposerAction>
+										)}
+										{text.length > 0 && (
+											<ComposerAction onClick={this.handleSendClick}>
+												<SendIcon width={20} height={20} />
+											</ComposerAction>
+										)}
+									</ComposerActions>
+								)}
+								limitTextLength={limitTextLength}
+							/>}
+					</Screen.Footer>
+				) : null}
+			</FilesDropTargetWrapper>
 		</Screen>
 	)
 }
