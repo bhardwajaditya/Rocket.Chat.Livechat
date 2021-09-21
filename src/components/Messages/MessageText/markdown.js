@@ -9,8 +9,6 @@ const md = new MarkdownIt({
 	typographer: true,
 });
 
-const sanitizeConfig = { ALLOWED_TAGS: ['a'], ALLOWED_ATTR: ['href', 'name', 'target'] };
-
 const defaultRender = md.renderer.rules.link_open || ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
 
 md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
@@ -83,4 +81,4 @@ md.use((md) => {
 	});
 });
 
-export const renderMarkdown = (...args) => sanitize(md.render(...args), sanitizeConfig);
+export const renderMarkdown = (...args) => sanitize(md.render(...args), { ADD_ATTR: ['href', 'name', 'target', 'rel'] });
