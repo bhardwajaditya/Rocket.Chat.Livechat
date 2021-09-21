@@ -32,7 +32,7 @@ const registerGuestAndCreateSession = async (triggerAction) => {
 		store.setState(guest);
 		const user = await Livechat.grantVisitor({ visitor: { ...guest } });
 
-		if (store.state.user) {
+		if (store.state.user || CustomFields.isEmpty()) {
 			startChat();
 		} else {
 			CustomFields.setOnCustomFieldsUpdated(startChat);

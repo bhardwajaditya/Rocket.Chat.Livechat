@@ -75,6 +75,10 @@ class CustomFields {
 	setOnCustomFieldsUpdated(callback) {
 		this._callback = callback || (() => { });
 	}
+
+	isEmpty() {
+		return Object.keys(this._queue).length === 0;
+	}
 }
 
 const instance = new CustomFields();
