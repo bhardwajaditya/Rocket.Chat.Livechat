@@ -129,11 +129,6 @@ export class Composer extends Component {
 		handleEmojiClick && handleEmojiClick();
 	}
 
-	handleClick = () => {
-		const { handleEmojiClick } = this.props;
-		handleEmojiClick && handleEmojiClick();
-	}
-
 	pasteText = (plainText) => {
 		this.el.focus();
 
