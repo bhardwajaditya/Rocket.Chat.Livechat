@@ -21,7 +21,7 @@ export const onChatClose = async () => {
 		alerts: [],
 		room: null,
 		chatClosed: false,
-		composerConfig: { disable: false, disableText: 'Please Wait', onDisabledComposerClick: () => {} },
+		composerConfig: { disable: true, disableText: CLOSE_CHAT, onDisabledComposerClick: () => {} },
 		minimized: true });
 	route('/chat-finished');
 	await store.setState({ loading: false });
