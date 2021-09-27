@@ -19,18 +19,22 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 
 	let warningTimer;
 	let timeoutTimer;
-	const { idleTimeout } = store.state;
+	const { idleTimeout, idleTimeoutTimer, chatClosed } = store.state;
+
+	if (chatClosed) {
+		return;
+	}
 
 	if (idleTimeoutAction === 'stop' && (idleTimeout && !idleTimeout.idleTimeoutRunning)) {
 		return;
 	}
 
 	const clearTimers = (warning = true, timeout = true) => {
-		if (warning && idleTimeout && idleTimeout.idleWarningTimer) {
-			clearTimeout(idleTimeout.idleWarningTimer);
+		if (warning && idleTimeoutTimer && idleTimeoutTimer.idleWarningTimer) {
+			clearTimeout(idleTimeoutTimer.idleWarningTimer);
 		}
-		if (timeout && idleTimeout && idleTimeout.idleTimeoutTimer) {
-			clearInterval(idleTimeout.idleTimeoutTimer);
+		if (timeout && idleTimeoutTimer && idleTimeoutTimer.idleTimeoutTimer) {
+			clearInterval(idleTimeoutTimer.idleTimeoutTimer);
 		}
 	};
 
@@ -86,9 +90,12 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 		await store.setState({
 			idleTimeout: {
 				...store.state.idleTimeout,
-				idleWarningTimer: null,
-				idleTimeoutTimer: null,
 				idleTimeoutRunning: false,
+			},
+			idleTimeoutTimer: {
+				...store.state.idleTimeoutTimer,
+				idleTimeoutTimer: null,
+				idleWarningTimer: null,
 			},
 		});
 	};
@@ -110,6 +117,9 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 		await store.setState({
 			idleTimeout: {
 				...store.state.idleTimeout,
+			},
+			idleTimeoutTimer: {
+				...store.state.idleTimeoutTimer,
 				idleTimeoutTimer: timeoutTimer,
 			},
 		});
@@ -132,12 +142,14 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 
 	await store.setState({
 		idleTimeout: {
-			idleWarningTimer: warningTimer,
-			idleTimeoutTimer: timeoutTimer,
 			idleTimeoutMessage,
 			idleTimeoutWarningTime,
 			idleTimeoutTimeoutTime,
 			idleTimeoutRunning: idleTimeoutAction === 'start',
+		},
+		idleTimeoutTimer: {
+			idleTimeoutTimer: timeoutTimer,
+			idleWarningTimer: warningTimer,
 		},
 	});
 };
