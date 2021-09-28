@@ -19,7 +19,7 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 
 	let warningTimer;
 	let timeoutTimer;
-	const { idleTimeout, idleTimeoutTimer, chatClosed } = store.state;
+	const { idleTimeout, idleTimeoutTimers, chatClosed } = store.state;
 
 	if (chatClosed) {
 		return;
@@ -30,11 +30,11 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 	}
 
 	const clearTimers = (warning = true, timeout = true) => {
-		if (warning && idleTimeoutTimer && idleTimeoutTimer.idleWarningTimer) {
-			clearTimeout(idleTimeoutTimer.idleWarningTimer);
+		if (warning && idleTimeoutTimers && idleTimeoutTimers.idleWarningTimer) {
+			clearTimeout(idleTimeoutTimers.idleWarningTimer);
 		}
-		if (timeout && idleTimeoutTimer && idleTimeoutTimer.idleTimeoutTimer) {
-			clearInterval(idleTimeoutTimer.idleTimeoutTimer);
+		if (timeout && idleTimeoutTimers && idleTimeoutTimers.idleTimeoutTimer) {
+			clearInterval(idleTimeoutTimers.idleTimeoutTimer);
 		}
 	};
 
@@ -92,8 +92,8 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 				...store.state.idleTimeout,
 				idleTimeoutRunning: false,
 			},
-			idleTimeoutTimer: {
-				...store.state.idleTimeoutTimer,
+			idleTimeoutTimers: {
+				...store.state.idleTimeoutTimers,
 				idleTimeoutTimer: null,
 				idleWarningTimer: null,
 			},
@@ -118,8 +118,8 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 			idleTimeout: {
 				...store.state.idleTimeout,
 			},
-			idleTimeoutTimer: {
-				...store.state.idleTimeoutTimer,
+			idleTimeoutTimers: {
+				...store.state.idleTimeoutTimers,
 				idleTimeoutTimer: timeoutTimer,
 			},
 		});
@@ -147,7 +147,7 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 			idleTimeoutTimeoutTime,
 			idleTimeoutRunning: idleTimeoutAction === 'start',
 		},
-		idleTimeoutTimer: {
+		idleTimeoutTimers: {
 			idleTimeoutTimer: timeoutTimer,
 			idleWarningTimer: warningTimer,
 		},
