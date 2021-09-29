@@ -19,18 +19,22 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 
 	let warningTimer;
 	let timeoutTimer;
-	const { idleTimeout } = store.state;
+	const { idleTimeout, idleTimeoutTimers, chatClosed } = store.state;
+
+	if (chatClosed) {
+		return;
+	}
 
 	if (idleTimeoutAction === 'stop' && (idleTimeout && !idleTimeout.idleTimeoutRunning)) {
 		return;
 	}
 
 	const clearTimers = (warning = true, timeout = true) => {
-		if (warning && idleTimeout && idleTimeout.idleWarningTimer) {
-			clearTimeout(idleTimeout.idleWarningTimer);
+		if (warning && idleTimeoutTimers && idleTimeoutTimers.idleWarningTimer) {
+			clearTimeout(idleTimeoutTimers.idleWarningTimer);
 		}
-		if (timeout && idleTimeout && idleTimeout.idleTimeoutTimer) {
-			clearInterval(idleTimeout.idleTimeoutTimer);
+		if (timeout && idleTimeoutTimers && idleTimeoutTimers.idleTimeoutTimer) {
+			clearInterval(idleTimeoutTimers.idleTimeoutTimer);
 		}
 	};
 
@@ -86,9 +90,12 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 		await store.setState({
 			idleTimeout: {
 				...store.state.idleTimeout,
-				idleWarningTimer: null,
-				idleTimeoutTimer: null,
 				idleTimeoutRunning: false,
+			},
+			idleTimeoutTimers: {
+				...store.state.idleTimeoutTimers,
+				idleTimeoutTimer: null,
+				idleWarningTimer: null,
 			},
 		});
 	};
@@ -110,6 +117,9 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 		await store.setState({
 			idleTimeout: {
 				...store.state.idleTimeout,
+			},
+			idleTimeoutTimers: {
+				...store.state.idleTimeoutTimers,
 				idleTimeoutTimer: timeoutTimer,
 			},
 		});
@@ -132,12 +142,14 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 
 	await store.setState({
 		idleTimeout: {
-			idleWarningTimer: warningTimer,
-			idleTimeoutTimer: timeoutTimer,
 			idleTimeoutMessage,
 			idleTimeoutWarningTime,
 			idleTimeoutTimeoutTime,
 			idleTimeoutRunning: idleTimeoutAction === 'start',
+		},
+		idleTimeoutTimers: {
+			idleTimeoutTimer: timeoutTimer,
+			idleWarningTimer: warningTimer,
 		},
 	});
 };
