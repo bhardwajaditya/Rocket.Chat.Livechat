@@ -16,6 +16,7 @@ import PlusIcon from '../../icons/plus.svg';
 import PrintIcon from '../../icons/print.svg';
 import RemoveIcon from '../../icons/remove.svg';
 import SendIcon from '../../icons/send.svg';
+import { store } from '../../store';
 // import EmojiIcon from '../../icons/smile.svg';
 import styles from './styles.scss';
 
@@ -187,7 +188,7 @@ export default class Chat extends Component {
 						options={options ? (
 							<FooterOptions>
 								<Menu.Group>
-									{onPrintTranscript && (
+									{onPrintTranscript && !store.state.hidePrint && (
 										<Menu.Item onClick={onPrintTranscript} icon={PrintIcon}>{I18n.t('Print Chat')}</Menu.Item>
 									)}
 									{onChangeDepartment && (

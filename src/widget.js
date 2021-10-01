@@ -1,5 +1,7 @@
 import mitt from 'mitt';
 
+import { store } from './store';
+
 
 const log = process.env.NODE_ENV === 'development'
 	? (...args) => window.console.log('%cwidget%c', 'color: red', 'color: initial', ...args)
@@ -235,6 +237,14 @@ const api = {
 		emitCallback('hide-widget');
 	},
 
+	showPrint() {
+		store.setState({ hidePrint: false });
+	},
+
+	hidePrint() {
+		store.setState({ hidePrint: true });
+	},
+
 	resetDocumentStyle() {
 		document.body.style.cssText = bodyStyle;
 	},
@@ -301,6 +311,14 @@ function showWidget() {
 
 function hideWidget() {
 	callHook('hideWidget');
+}
+
+function showPrint() {
+	callHook('showPrint');
+}
+
+function hidePrint() {
+	callHook('hidePrint');
 }
 
 function maximizeWidget() {
@@ -438,6 +456,8 @@ window.RocketChat.livechat = {
 	setLanguage,
 	showWidget,
 	hideWidget,
+	showPrint,
+	hidePrint,
 	maximizeWidget,
 	minimizeWidget,
 
