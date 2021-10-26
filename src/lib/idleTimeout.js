@@ -2,6 +2,7 @@ import { Livechat } from '../api';
 import { ModalManager } from '../components/Modal';
 import I18n from '../i18n';
 import { store } from '../store';
+import logger from './logger';
 
 const idleTimeoutWarningId = 'idleTimeoutWarning';
 
@@ -76,6 +77,7 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 
 	const onTimeout = async () => {
 		const { token, room: { _id: rid } = {} } = store.state;
+		logger.info('Closing chat on widget timeout');
 
 		// Send customer idle timeout message to close chat
 		if (token && rid) {

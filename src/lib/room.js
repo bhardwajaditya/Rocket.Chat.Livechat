@@ -6,6 +6,7 @@ import { store } from '../store';
 import { normalizeAgent } from './api';
 import Commands from './commands';
 import { handleIdleTimeout } from './idleTimeout';
+import logger from './logger';
 import { loadConfig, processUnread } from './main';
 import { parentCall } from './parentCall';
 import { normalizeMessage, normalizeMessages } from './threads';
@@ -31,6 +32,7 @@ export const onChatClose = async () => {
 
 export const closeChat = async ({ transcriptRequested } = {}) => {
 	store.setState({ alerts: [] });
+	logger.info('Closing chat');
 	if (!transcriptRequested) {
 		await handleTranscript();
 	}
@@ -42,9 +44,12 @@ export const closeChat = async ({ transcriptRequested } = {}) => {
 	},
 	chatClosed: true,
 	});
+	logger.info('Composer disabled and chat closed');
+	logger.sendLogsToES();
 };
 
 export const closeChatFromModal = async ({ transcriptRequested } = {}) => {
+	logger.info('User closing chat from modal');
 	store.setState({ alerts: [] });
 	if (!transcriptRequested) {
 		await handleTranscript();
@@ -99,6 +104,7 @@ const handleComposerOnMessage = async (message) => {
 
 const processMessage = async (message) => {
 	if (message.t === 'livechat-close') {
+		logger.info('Livechat close message received');
 		closeChat(message);
 		handleIdleTimeout({
 			idleTimeoutAction: 'stop',
@@ -121,10 +127,12 @@ const doPlaySound = async (message) => {
 };
 
 export const initRoom = async () => {
+	logger.info('Room initialization request');
 	const { state } = store;
 	const { room } = state;
 
 	if (!room) {
+		logger.info('Existing room not found post initialization request');
 		return;
 	}
 
@@ -345,6 +353,7 @@ export const defaultRoomParams = () => {
 };
 
 export const assignRoom = async () => {
+	logger.info('Room assign request initiated');
 	const { room } = store.state;
 
 	if (room) {
