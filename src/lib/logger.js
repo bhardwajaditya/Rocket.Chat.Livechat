@@ -35,7 +35,12 @@ class Logger {
 	}
 
 	async sendLogsToES() {
-		const { config: { settings: { livechat_enable_elastic_search_logs: enable, livechat_elastic_search_url: url, livechat_elastic_search_index: index } } } = store.state;
+		const { config: { settings: {
+			livechat_enable_elastic_search_logs: enable,
+			livechat_elastic_search_url: url,
+			livechat_elastic_search_index: index,
+			livechat_elastic_search_token: token,
+		} } } = store.state;
 		if (!enable) {
 			return;
 		}
@@ -43,6 +48,7 @@ class Logger {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
+				Authorization: `Basic ${ token }`,
 			},
 			body: this.activeLogs,
 		});
