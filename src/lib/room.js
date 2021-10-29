@@ -22,7 +22,9 @@ export const onChatClose = async () => {
 		room: null,
 		chatClosed: false,
 		composerConfig: { disable: true, disableText: CLOSE_CHAT, onDisabledComposerClick: () => {} },
-		minimized: true });
+		minimized: true,
+	});
+	parentCall('minimizeWindow');
 	route('/chat-finished');
 	await store.setState({ loading: false });
 };
