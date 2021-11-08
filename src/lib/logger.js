@@ -32,7 +32,7 @@ class Logger {
 		const message = util.format.apply(util, input);
 		const { room, token } = store.state;
 		const newLog = {
-			_timestamp: new Date().toISOString(),
+			timestamp: new Date().toISOString(),
 			room_id: room?._id,
 			userToken: token,
 			message,
