@@ -7,6 +7,7 @@ import { createToken, debounce, getAvatarUrl, getFilteredMsg, canRenderMessage, 
 import I18n from '../../i18n';
 import { normalizeQueueAlert } from '../../lib/api';
 import constants from '../../lib/constants';
+import logger from '../../lib/logger';
 import { loadConfig } from '../../lib/main';
 import { parentCall, runCallbackEventEmitter } from '../../lib/parentCall';
 import { initRoom, closeChatFromModal, loadMessages, loadMoreMessages, defaultRoomParams, getGreetingMessages, onChatClose, CLOSE_CHAT } from '../../lib/room';
@@ -62,16 +63,18 @@ export class ChatContainer extends Component {
 	}
 
 	getRoom = async () => {
+		logger.info('Get room called from the container code');
 		const { alerts, dispatch, room, messages } = this.props;
 		const previousMessages = getGreetingMessages(messages);
 
 		if (room) {
+			logger.info('Exisiting room found returning it');
 			return room;
 		}
-
+		logger.info('Disabling composer');
 		await dispatch({ loading: true });
 		await dispatch({ composerConfig: { disable: true, disableText: 'Starting chat...' } });
-		console.error('Room not found on user input, sending a new room creation request');
+		logger.info('Room not found on user input, sending a new room creation request');
 		try {
 			const params = defaultRoomParams();
 			const newRoom = await Livechat.room(params);

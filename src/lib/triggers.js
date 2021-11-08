@@ -6,6 +6,7 @@ import I18n from '../i18n';
 import store from '../store';
 import { normalizeAgent } from './api';
 import CustomFields from './customFields';
+import logger from './logger';
 import { processUnread } from './main';
 import { parentCall, runCallbackEventEmitter } from './parentCall';
 import { assignRoom } from './room';
@@ -14,8 +15,10 @@ const agentCacheExpiry = 3600000;
 let agentPromise;
 
 const registerGuestAndCreateSession = async (triggerAction) => {
+	logger.info('Starting new guest session');
 	const { alerts, room, token } = store.state;
 	if (room) {
+		logger.info('Existing room found thus returning it');
 		return room;
 	}
 
@@ -24,6 +27,7 @@ const registerGuestAndCreateSession = async (triggerAction) => {
 		parentCall('callback', 'chat-started');
 	};
 
+	logger.info('Disabling composer initially');
 	store.setState({ loading: true });
 	store.setState({ chatClosed: false, composerConfig: { disable: true, disableText: 'Starting chat...' } });
 	try {
@@ -169,6 +173,7 @@ class Triggers {
 					store.setState({ minimized: false });
 				});
 			} else if (action.name === 'start-session') {
+				logger.info('Firing initial trigger');
 				registerGuestAndCreateSession(action).then(() => {
 					store.setState({ triggered: true });
 				});
