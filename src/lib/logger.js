@@ -1,13 +1,7 @@
 import util from 'util';
 
 import { store } from '../store';
-
-const isMobile = () => {
-	if (window.matchMedia('(max-width: 500px)').matches) {
-		return true;
-	}
-	return false;
-};
+import { isMobile } from './util';
 
 const urlDecomposition = (url) => {
 	let tempUrl = url.split('://');
