@@ -2,7 +2,12 @@ import util from 'util';
 
 import { store } from '../store';
 
-const { localStorage } = window;
+const isMobile = () => {
+	if (window.matchMedia('(max-width: 500px)').matches) {
+		return true;
+	}
+	return false;
+};
 
 const urlDecomposition = (url) => {
 	let tempUrl = url.split('://');
@@ -22,13 +27,21 @@ const urlDecomposition = (url) => {
 };
 class Logger {
 	constructor(name, key = 'logs') {
+		if (isMobile()) {
+			return;
+		}
+		const { localStorage } = window;
+		this.localStorage = localStorage;
 		this.name = name;
 		this.localStorageKey = key;
-		this.activeLogs = localStorage.getItem(localStorage) || '';
-		localStorage.setItem(this.localStorageKey, this.activeLogs);
+		this.activeLogs = this.localStorage.getItem(localStorage) || '';
+		this.localStorage.setItem(this.localStorageKey, this.activeLogs);
 	}
 
 	info(...input) {
+		if (isMobile()) {
+			return;
+		}
 		const message = util.format.apply(util, input);
 		const { room, token } = store.state;
 		const newLog = {
@@ -42,15 +55,18 @@ class Logger {
 
 	appendLog(newLog) {
 		this.activeLogs += newLog;
-		localStorage.setItem(this.localStorageKey, this.activeLogs);
+		this.localStorage.setItem(this.localStorageKey, this.activeLogs);
 	}
 
 	clearLogs() {
 		this.activeLogs = [];
-		localStorage.setItem(this.localStorageKey, []);
+		this.localStorage.setItem(this.localStorageKey, []);
 	}
 
 	async sendLogsToES() {
+		if (isMobile()) {
+			return;
+		}
 		const aws4 = require('aws4');
 		const { config: { settings: {
 			livechat_enable_elastic_search_logs: enable,
