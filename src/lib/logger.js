@@ -2,7 +2,26 @@ import util from 'util';
 
 import { store } from '../store';
 
-const { localStorage } = window;
+const isMobile = () => {
+	let hasTouchScreen = false;
+	if ('maxTouchPoints' in navigator) {
+		hasTouchScreen = navigator.maxTouchPoints > 0;
+	} else if ('msMaxTouchPoints' in navigator) {
+		hasTouchScreen = navigator.msMaxTouchPoints > 0;
+	} else {
+		const mQ = window.matchMedia && matchMedia('(pointer:coarse)');
+		if (mQ && mQ.media === '(pointer:coarse)') {
+			hasTouchScreen = !!mQ.matches;
+		} else if ('orientation' in window) {
+			hasTouchScreen = true;
+		} else {
+			const UA = navigator.userAgent;
+			hasTouchScreen = /\b(BlackBerry|webOS|iPhone|IEMobile)\b/i.test(UA)
+              || /\b(Android|Windows Phone|iPad|iPod)\b/i.test(UA);
+		}
+	}
+	return hasTouchScreen;
+};
 
 const urlDecomposition = (url) => {
 	let tempUrl = url.split('://');
@@ -22,13 +41,21 @@ const urlDecomposition = (url) => {
 };
 class Logger {
 	constructor(name, key = 'logs') {
+		if (isMobile()) {
+			return;
+		}
+		const { localStorage } = window;
+		this.localStorage = localStorage;
 		this.name = name;
 		this.localStorageKey = key;
-		this.activeLogs = localStorage.getItem(localStorage) || '';
-		localStorage.setItem(this.localStorageKey, this.activeLogs);
+		this.activeLogs = this.localStorage.getItem(this.localStorageKey) || '';
+		this.localStorage.setItem(this.localStorageKey, this.activeLogs);
 	}
 
 	info(...input) {
+		if (isMobile()) {
+			return;
+		}
 		const message = util.format.apply(util, input);
 		const { room, token } = store.state;
 		const newLog = {
@@ -42,15 +69,18 @@ class Logger {
 
 	appendLog(newLog) {
 		this.activeLogs += newLog;
-		localStorage.setItem(this.localStorageKey, this.activeLogs);
+		this.localStorage.setItem(this.localStorageKey, this.activeLogs);
 	}
 
 	clearLogs() {
 		this.activeLogs = [];
-		localStorage.setItem(this.localStorageKey, []);
+		this.localStorage.setItem(this.localStorageKey, []);
 	}
 
 	async sendLogsToES() {
+		if (isMobile()) {
+			return;
+		}
 		const aws4 = require('aws4');
 		const { config: { settings: {
 			livechat_enable_elastic_search_logs: enable,
@@ -60,6 +90,7 @@ class Logger {
 			livechat_elastic_search_access_key_secret: secret_access_key,
 		} } } = store.state;
 		if (!enable) {
+			this.clearLogs();
 			return;
 		}
 
