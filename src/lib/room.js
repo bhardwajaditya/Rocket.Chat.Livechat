@@ -11,6 +11,7 @@ import { loadConfig, processUnread } from './main';
 import { parentCall } from './parentCall';
 import { normalizeMessage, normalizeMessages } from './threads';
 import { handleTranscript } from './transcript';
+import { isMobile } from './util';
 
 const commands = new Commands();
 export const CLOSE_CHAT = 'Close Chat';
@@ -23,9 +24,11 @@ export const onChatClose = async () => {
 		room: null,
 		chatClosed: false,
 		composerConfig: { disable: true, disableText: CLOSE_CHAT, onDisabledComposerClick: () => {} },
-		minimized: true,
 	});
-	parentCall('minimizeWindow');
+	if (!isMobile()) {
+		store.setState({ minimized: true });
+		parentCall('minimizeWindow');
+	}
 	route('/chat-finished');
 	await store.setState({ loading: false });
 };
