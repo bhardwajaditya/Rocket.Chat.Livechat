@@ -34,7 +34,7 @@ class Logger {
 		this.localStorage = localStorage;
 		this.name = name;
 		this.localStorageKey = key;
-		this.activeLogs = this.localStorage.getItem(localStorage) || '';
+		this.activeLogs = this.localStorage.getItem(this.localStorageKey) || '';
 		this.localStorage.setItem(this.localStorageKey, this.activeLogs);
 	}
 
@@ -76,6 +76,7 @@ class Logger {
 			livechat_elastic_search_access_key_secret: secret_access_key,
 		} } } = store.state;
 		if (!enable) {
+			this.clearLogs();
 			return;
 		}
 
