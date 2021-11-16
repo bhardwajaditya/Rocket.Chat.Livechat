@@ -1,7 +1,6 @@
 import util from 'util';
 
 import { store } from '../store';
-import { isMobile } from './util';
 
 const urlDecomposition = (url) => {
 	let tempUrl = url.split('://');
@@ -21,9 +20,6 @@ const urlDecomposition = (url) => {
 };
 class Logger {
 	constructor(name, key = 'logs') {
-		if (isMobile()) {
-			return;
-		}
 		const { localStorage } = window;
 		this.localStorage = localStorage;
 		this.name = name;
@@ -33,9 +29,6 @@ class Logger {
 	}
 
 	info(...input) {
-		if (isMobile()) {
-			return;
-		}
 		const message = util.format.apply(util, input);
 		const { room, token } = store.state;
 		const newLog = {
@@ -58,9 +51,6 @@ class Logger {
 	}
 
 	async sendLogsToES() {
-		if (isMobile()) {
-			return;
-		}
 		const aws4 = require('aws4');
 		const { config: { settings: {
 			livechat_enable_elastic_search_logs: enable,
