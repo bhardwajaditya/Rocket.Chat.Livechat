@@ -1,8 +1,5 @@
 import mitt from 'mitt';
 
-import { store } from './store';
-
-
 const log = process.env.NODE_ENV === 'development'
 	? (...args) => window.console.log('%cwidget%c', 'color: red', 'color: initial', ...args)
 	: () => {};
@@ -36,6 +33,8 @@ export const validCallbacks = [
 	'offline-form-submit',
 	'show-widget',
 	'hide-widget',
+	'show-print',
+	'hide-print',
 	'assign-agent',
 	'agent-status-change',
 	'queue-position-change',
@@ -238,11 +237,11 @@ const api = {
 	},
 
 	showPrint() {
-		store.setState({ hidePrint: false });
+		emitCallback('show-print');
 	},
 
 	hidePrint() {
-		store.setState({ hidePrint: true });
+		emitCallback('hide-print');
 	},
 
 	resetDocumentStyle() {
