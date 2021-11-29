@@ -147,6 +147,12 @@ module.exports = (env, argv) => [
 				],
 				chunksSortMode: 'manual',
 			}),
+			new webpack.ProvidePlugin({
+				Buffer: ['buffer', 'Buffer'],
+			}),
+			new webpack.ProvidePlugin({
+				process: 'process/browser',
+			}),
 		],
 		optimization: {
 			sideEffects: false,

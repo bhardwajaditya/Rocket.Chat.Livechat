@@ -8,22 +8,105 @@ import { store } from '../store';
 import { normalizeAgent } from './api';
 import Commands from './commands';
 import constants from './constants';
+import { handleIdleTimeout } from './idleTimeout';
+import logger from './logger';
 import { loadConfig, processUnread } from './main';
 import { parentCall } from './parentCall';
 import { normalizeMessage, normalizeMessages } from './threads';
 import { handleTranscript } from './transcript';
+import { isMobile } from './util';
 
 
 const commands = new Commands();
+export const CLOSE_CHAT = 'Close Chat';
+
+export const onChatClose = async () => {
+	await store.setState({ loading: true });
+	await loadConfig();
+	await store.setState({
+		alerts: [],
+		room: null,
+		chatClosed: false,
+		composerConfig: { disable: true, disableText: CLOSE_CHAT, onDisabledComposerClick: () => {} },
+	});
+	if (!isMobile()) {
+		store.setState({ minimized: true });
+		parentCall('minimizeWindow');
+	}
+	route('/chat-finished');
+	await store.setState({ loading: false });
+};
 
 export const closeChat = async ({ transcriptRequested } = {}) => {
+	store.setState({ alerts: [] });
+	logger.info('Closing chat');
 	if (!transcriptRequested) {
 		await handleTranscript();
 	}
-
-	await loadConfig();
 	parentCall('callback', 'chat-ended');
-	route('/chat-finished');
+	store.setState({ composerConfig: {
+		disable: true,
+		disableText: CLOSE_CHAT,
+		onDisabledComposerClick: onChatClose,
+	},
+	chatClosed: true,
+	});
+	logger.info('Composer disabled and chat closed');
+	logger.sendLogsToES();
+};
+
+export const closeChatFromModal = async ({ transcriptRequested } = {}) => {
+	logger.info('User closing chat from modal');
+	store.setState({ alerts: [] });
+	if (!transcriptRequested) {
+		await handleTranscript();
+	}
+	parentCall('callback', 'chat-ended');
+	onChatClose();
+};
+
+
+const disableComposer = (msg) => {
+	const defaultText = 'Please Wait';
+	const result = { disable: false, disableText: defaultText };
+
+	if (!msg) {
+		return result;
+	}
+
+	const { customFields = {}, attachments = [] } = msg;
+
+	if (customFields.disableInput) {
+		return { disable: true, disableText: customFields.disableInputMessage || defaultText };
+	}
+
+	for (let i = 0; i < attachments.length; i++) {
+		const { actions = [] } = attachments[i];
+
+		for (let j = 0; j < actions.length; j++) {
+			const { disableInput, disableInputMessage } = actions[j];
+			if (disableInput) {
+				return { disable: true, disableText: disableInputMessage || defaultText };
+			}
+		}
+	}
+
+	return result;
+};
+
+const handleComposerOnMessage = async (message) => {
+	const { composerConfig, chatClosed } = store.state;
+	const { disable, disableText } = disableComposer(message);
+
+	if (chatClosed || message.t === 'livechat-started' || message.t === 'livechat-close' || message.t === 'command') {
+		return;
+	}
+
+	if (disable) {
+		await store.setState({ composerConfig: { disable: true, disableText, onDisabledComposerClick: () => {} } });
+	} else if (composerConfig && composerConfig.disableText !== CLOSE_CHAT) {
+		await store.setState({ composerConfig: { disable: false, disableText: 'Please Wait', onDisabledComposerClick: () => {} } });
+	}
 };
 
 // TODO: use a separate event to listen to call start event. Listening on the message type isn't a good solution
@@ -54,7 +137,11 @@ export const processIncomingCallMessage = async (message) => {
 
 const processMessage = async (message) => {
 	if (message.t === 'livechat-close') {
+		logger.info('Livechat close message received');
 		closeChat(message);
+		handleIdleTimeout({
+			idleTimeoutAction: 'stop',
+		});
 	} else if (message.t === 'command') {
 		commands[message.msg] && commands[message.msg]();
 	} else if (message.webRtcCallEndTs) {
@@ -62,12 +149,14 @@ const processMessage = async (message) => {
 	} else if (message.t === constants.webRTCCallStartedMessageType || message.t === constants.jitsiCallStartedMessageType) {
 		await processIncomingCallMessage(message);
 	}
+
+	handleComposerOnMessage(message);
 };
 
 const doPlaySound = async (message) => {
 	const { sound, user } = store.state;
 
-	if (!sound.enabled || (user && message.u && message.u._id === user._id)) {
+	if (!sound.enabled || (user && message.u && message.u._id === user._id) || !message.msg) {
 		return;
 	}
 
@@ -75,10 +164,12 @@ const doPlaySound = async (message) => {
 };
 
 export const initRoom = async () => {
+	logger.info('Room initialization request');
 	const { state } = store;
 	const { room } = state;
 
 	if (!room) {
+		logger.info('Existing room not found post initialization request');
 		return;
 	}
 
@@ -171,6 +262,24 @@ Livechat.onMessage(async (message) => {
 		messages: upsert(store.state.messages, message, ({ _id }) => _id === message._id, ({ ts }) => ts),
 	});
 
+	// Viasat : Timeout Warnings
+	if (message.customFields && message.customFields.idleTimeoutConfig) {
+		handleIdleTimeout(message.customFields.idleTimeoutConfig);
+	} else {
+		handleIdleTimeout({
+			idleTimeoutAction: 'stop',
+		});
+	}
+
+	if (message.customFields) {
+		if (message.customFields.sneakPeekEnabled !== undefined || message.customFields.sneakPeekEnabled !== null) {
+			store.setState({ sneakPeekEnabled: message.customFields.sneakPeekEnabled });
+		}
+		if (message.customFields.salesforceAgentName) {
+			store.state.agent.name = message.customFields.salesforceAgentName;
+		}
+	}
+
 	await processMessage(message);
 
 	if (canRenderMessage(message) !== true) {
@@ -190,23 +299,56 @@ export const getLatestCallMessage = (messages) => messages && messages.filter((m
 
 export const loadMessages = async () => {
 	const { ongoingCall } = store.state;
+	const { room: { _id: rid, callStatus } = {} } = store.state;
 
-	const { messages: storedMessages, room: { _id: rid, callStatus } = {} } = store.state;
-	const previousMessages = getGreetingMessages(storedMessages);
 	if (!rid) {
 		return;
 	}
 
 	await store.setState({ loading: true });
-	const rawMessages = (await Livechat.loadMessages(rid)).concat(previousMessages);
-	const messages = (await normalizeMessages(rawMessages)).map(transformAgentInformationOnMessage);
+	let rawMessages = await Livechat.loadMessages(rid);
+	rawMessages = rawMessages?.reverse();
+	const { messages: storedMessages } = store.state;
+	(storedMessages || []).forEach((message) => {
+		rawMessages = upsert(rawMessages, message, ({ _id }) => _id === message._id, ({ ts }) => ts);
+	});
+	const messages = (await normalizeMessages(rawMessages)).map(transformAgentInformationOnMessage).map((message) => {
+		const oldMessage = storedMessages.find((x) => x._id === message._id);
+		if (oldMessage && oldMessage.actionsVisible !== undefined) {
+			message.actionsVisible = oldMessage.actionsVisible;
+		}
+		handleComposerOnMessage(message);
+		return message;
+	});
 
 	await initRoom();
-	await store.setState({ messages: (messages || []).reverse(), noMoreMessages: false, loading: false });
+	await store.setState({ messages: (messages || []).sort((a, b) => new Date(a.ts) - new Date(b.ts)), noMoreMessages: false, loading: false });
 
 	if (messages && messages.length) {
 		const lastMessage = messages[messages.length - 1];
 		await store.setState({ lastReadMessageId: lastMessage && lastMessage._id });
+
+		const { disable, disableText } = disableComposer(lastMessage);
+
+		if (disable) {
+			store.setState({ composerConfig: { disable: true, disableText, onDisabledComposerClick: () => {} } });
+		}
+	}
+
+	const { idleTimeout } = store.state;
+
+	if (idleTimeout && idleTimeout.idleTimeoutRunning) {
+		const {
+			idleTimeoutMessage,
+			idleTimeoutWarningTime,
+			idleTimeoutTimeoutTime,
+		} = idleTimeout;
+		handleIdleTimeout({
+			idleTimeoutAction: 'start',
+			idleTimeoutMessage,
+			idleTimeoutWarningTime,
+			idleTimeoutTimeoutTime,
+		});
 	}
 
 	if (ongoingCall && isCallOngoing(ongoingCall.callStatus)) {
@@ -261,11 +403,20 @@ export const loadMoreMessages = async () => {
 
 	await store.setState({ loading: true });
 
-	const rawMessages = await Livechat.loadMessages(rid, { limit: messages.length + 10 });
-	const moreMessages = (await normalizeMessages(rawMessages)).map(transformAgentInformationOnMessage);
+	let rawMessages = await Livechat.loadMessages(rid, { limit: messages.length + 10 });
+	rawMessages = rawMessages?.reverse();
+	const moreMessages = (await normalizeMessages(rawMessages)).map(transformAgentInformationOnMessage).map((message) => {
+		const { _id } = message;
+		const oldMessage = messages.find((x) => x._id === _id);
+		if (oldMessage && oldMessage.actionsVisible !== undefined) {
+			message.actionsVisible = oldMessage.actionsVisible;
+		}
+		handleComposerOnMessage(message);
+		return message;
+	});
 
 	await store.setState({
-		messages: (moreMessages || []).reverse(),
+		messages: moreMessages || [],
 		noMoreMessages: messages.length + 10 > moreMessages.length,
 		loading: false,
 	});
@@ -280,6 +431,20 @@ export const defaultRoomParams = () => {
 	}
 
 	return params;
+};
+
+export const assignRoom = async () => {
+	logger.info('Room assign request initiated');
+	const { room } = store.state;
+
+	if (room) {
+		return;
+	}
+
+	const params = defaultRoomParams();
+	const newRoom = await Livechat.room(params);
+	await store.setState({ room: newRoom });
+	await initRoom();
 };
 
 store.on('change', ([state, prevState]) => {

@@ -3,14 +3,16 @@ import { route } from 'preact-router';
 
 import { Livechat } from '../../api';
 import { ModalManager } from '../../components/Modal';
-import { createToken, debounce, getAvatarUrl, canRenderMessage, throttle, upsert } from '../../components/helpers';
+import { createToken, debounce, getAvatarUrl, getFilteredMsg, canRenderMessage, throttle, upsert } from '../../components/helpers';
 import I18n from '../../i18n';
 import { normalizeQueueAlert } from '../../lib/api';
 import constants from '../../lib/constants';
+import logger from '../../lib/logger';
 import { loadConfig } from '../../lib/main';
 import { parentCall, runCallbackEventEmitter } from '../../lib/parentCall';
-import { initRoom, closeChat, loadMessages, loadMoreMessages, defaultRoomParams, getGreetingMessages } from '../../lib/room';
-import { Consumer } from '../../store';
+import { initRoom, closeChatFromModal, loadMessages, loadMoreMessages, defaultRoomParams, getGreetingMessages, onChatClose, CLOSE_CHAT } from '../../lib/room';
+import triggers from '../../lib/triggers';
+import store, { Consumer } from '../../store';
 import Chat from './component';
 
 export class ChatContainer extends Component {
@@ -61,14 +63,18 @@ export class ChatContainer extends Component {
 	}
 
 	getRoom = async () => {
+		logger.info('Get room called from the container code');
 		const { alerts, dispatch, room, messages } = this.props;
 		const previousMessages = getGreetingMessages(messages);
 
 		if (room) {
+			logger.info('Exisiting room found returning it');
 			return room;
 		}
-
+		logger.info('Disabling composer');
 		await dispatch({ loading: true });
+		await dispatch({ composerConfig: { disable: true, disableText: 'Starting chat...' } });
+		logger.info('Room not found on user input, sending a new room creation request');
 		try {
 			const params = defaultRoomParams();
 			const newRoom = await Livechat.room(params);
@@ -85,7 +91,7 @@ export class ChatContainer extends Component {
 			runCallbackEventEmitter(reason);
 			throw error;
 		} finally {
-			await dispatch({ loading: false });
+			await dispatch({ loading: false, composerConfig: { disable: false } });
 		}
 	}
 
@@ -93,8 +99,8 @@ export class ChatContainer extends Component {
 		loadMoreMessages();
 	}
 
-	startTyping = throttle(async ({ rid, username }) => {
-		await Livechat.notifyVisitorTyping(rid, username, true);
+	startTyping = throttle(async ({ rid, username, text }) => {
+		await Livechat.notifyVisitorTyping(rid, username, true, text);
 		this.stopTypingDebounced({ rid, username });
 	}, 4500)
 
@@ -102,13 +108,40 @@ export class ChatContainer extends Component {
 
 	stopTypingDebounced = debounce(this.stopTyping, 5000)
 
-	handleChangeText = async () => {
+	handleSneakPeakDebounced = debounce(async ({ rid, username, text }) => {
+		await Livechat.notifyVisitorTyping(rid, username, true, text);
+	}, 2000)
+
+	handleChangeText = async (text) => {
 		const { user, room } = this.props;
 		if (!(user && user.username && room && room._id)) {
 			return;
 		}
+		const { sneakPeekEnabled } = store.state;
+		sneakPeekEnabled && this.handleSneakPeakDebounced({ rid: room._id, username: user.username, text });
+		this.startTyping(sneakPeekEnabled ? { rid: room._id, username: user.username, text } : { rid: room._id, username: user.username });
+	}
 
-		this.startTyping({ rid: room._id, username: user.username });
+	resetLastAction = () => {
+		// makes all actions button invisible
+		const { messages, dispatch } = this.props;
+
+		const newMessages = messages.map((message) => {
+			if (message.actionsVisible) {
+				message.actionsVisible = false;
+			}
+			return message;
+		});
+		dispatch({ messages: newMessages });
+	}
+
+	getAvatar = (username, isVisitor = false, name = null) => {
+		if (!isVisitor || name) {
+			return getAvatarUrl(name || username);
+		}
+
+		const { defaultAvatar } = this.props;
+		return `${ Livechat.client.host }/${ defaultAvatar.url || defaultAvatar.defaultUrl }`;
 	}
 
 	handleSubmit = async (msg) => {
@@ -119,12 +152,15 @@ export class ChatContainer extends Component {
 		await this.grantUser();
 		const { _id: rid } = await this.getRoom();
 		const { alerts, dispatch, token, user } = this.props;
+		const avatar = this.getAvatar(user.username, true, user.name);
 
 		try {
 			this.stopTypingDebounced.stop();
+			this.handleSneakPeakDebounced.stop();
+			this.resetLastAction();
 			await Promise.all([
 				this.stopTyping({ rid, username: user.username }),
-				Livechat.sendMessage({ msg, token, rid }),
+				Livechat.sendMessage({ msg: getFilteredMsg(msg), token, rid, avatar }),
 			]);
 		} catch (error) {
 			const reason = error?.data?.error ?? error.message;
@@ -173,8 +209,14 @@ export class ChatContainer extends Component {
 	}
 
 	onFinishChat = async () => {
+		const { composerConfig } = this.props;
+		if (composerConfig && composerConfig.disableText === CLOSE_CHAT) {
+			onChatClose();
+			return;
+		}
+
 		const { success } = await ModalManager.confirm({
-			text: I18n.t('Are you sure you want to finish this chat?'),
+			text: I18n.t('All of this conversation history will be lost if you close this chat. Continue?'),
 		});
 
 		if (!success) {
@@ -194,7 +236,7 @@ export class ChatContainer extends Component {
 			await dispatch({ alerts: (alerts.push(alert), alerts) });
 		} finally {
 			await dispatch({ loading: false });
-			await closeChat();
+			await closeChatFromModal();
 		}
 	}
 
@@ -221,6 +263,16 @@ export class ChatContainer extends Component {
 			await dispatch({ loading: false });
 			route('/chat-finished');
 		}
+	}
+
+	onPrintTranscript = () => {
+		const printContent = document.getElementById('chat__messages').innerHTML;
+		const head = document.getElementsByTagName('head')[0].innerHTML;
+		const printWindow = window.open();
+		printWindow.document.write(printContent);
+		printWindow.document.head.innerHTML = head;
+		printWindow.document.body.setAttribute('onload', 'window.print()');
+		printWindow.document.close();
 	}
 
 	canSwitchDepartment = () => {
@@ -260,6 +312,11 @@ export class ChatContainer extends Component {
 	}
 
 	onRegisterUser = () => route('/register');
+
+	canPrintTranscript = () => {
+		const { printTranscript } = this.props;
+		return printTranscript;
+	}
 
 	showOptionsMenu = () =>
 		this.canSwitchDepartment() || this.canFinishChat() || this.canRemoveUserData()
@@ -312,7 +369,7 @@ export class ChatContainer extends Component {
 	}
 
 	async componentDidUpdate(prevProps) {
-		const { messages, visible, minimized, dispatch } = this.props;
+		const { messages, visible, minimized, dispatch, room, route } = this.props;
 		const { messages: prevMessages, alerts: prevAlerts } = prevProps;
 
 		if (messages && prevMessages && messages.length !== prevMessages.length && visible && !minimized) {
@@ -321,6 +378,14 @@ export class ChatContainer extends Component {
 			if ((nextLastMessage && lastMessage && nextLastMessage._id !== lastMessage._id) || (messages.length === 1 && prevMessages.length === 0)) {
 				const newAlerts = prevAlerts.filter((item) => item.id !== constants.unreadMessagesAlertId);
 				dispatch({ alerts: newAlerts, unread: null, lastReadMessageId: nextLastMessage._id });
+			}
+		} else if (!room && visible && !minimized) {
+			if (prevProps.minimized) {
+				// Trigger Chat Opened when user starts chat by clicking icon
+				triggers.processChatOpened();
+			} else if (prevProps.route !== route && route === '/') {
+				// Trigger Chat Opened when user goes to chat by registering or new chat
+				triggers.processChatOpened();
 			}
 		}
 
@@ -335,7 +400,7 @@ export class ChatContainer extends Component {
 	render = ({ user, ...props }) => (
 		<Chat
 			{...props}
-			avatarResolver={getAvatarUrl}
+			avatarResolver={this.getAvatar}
 			uid={user && user._id}
 			onTop={this.handleTop}
 			onChangeText={this.handleChangeText}
@@ -345,9 +410,14 @@ export class ChatContainer extends Component {
 			onChangeDepartment={(this.canSwitchDepartment() && this.onChangeDepartment) || null}
 			onFinishChat={(this.canFinishChat() && this.onFinishChat) || null}
 			onRemoveUserData={(this.canRemoveUserData() && this.onRemoveUserData) || null}
+			onPrintTranscript={(this.canPrintTranscript() && this.onPrintTranscript) || null}
 			onSoundStop={this.handleSoundStop}
 			registrationRequired={this.registrationRequired()}
 			onRegisterUser={this.onRegisterUser}
+			resetLastAction={this.resetLastAction}
+			composerConfig={props.composerConfig}
+			livechat_kill_switch={props.livechat_kill_switch}
+			livechat_kill_switch_message={props.livechat_kill_switch_message}
 		/>
 	)
 }
@@ -359,16 +429,21 @@ export const ChatConnector = ({ ref, ...props }) => (
 			config: {
 				settings: {
 					fileUpload: uploads,
+					guestDefaultAvatar: defaultAvatar,
 					allowSwitchingDepartments,
 					forceAcceptDataProcessingConsent: allowRemoveUserData,
 					showConnecting,
 					registrationForm,
 					nameFieldRegistrationForm,
 					emailFieldRegistrationForm,
+					transcript,
+					printTranscript,
 					limitTextLength,
+					livechat_kill_switch,
+					livechat_kill_switch_message,
 				} = {},
 				messages: {
-					conversationFinishedMessage,
+					conversationFinishedText,
 				} = {},
 				theme: {
 					color,
@@ -396,6 +471,7 @@ export const ChatConnector = ({ ref, ...props }) => (
 			loading,
 			dispatch,
 			alerts,
+			composerConfig,
 			visible,
 			unread,
 			lastReadMessageId,
@@ -403,6 +479,7 @@ export const ChatConnector = ({ ref, ...props }) => (
 			queueInfo,
 			incomingCallAlert,
 			ongoingCall,
+			route,
 		}) => (
 			<ChatContainer
 				ref={ref}
@@ -413,11 +490,11 @@ export const ChatConnector = ({ ref, ...props }) => (
 					iconColor: customIconColor,
 					title: customTitle,
 				}}
-				title={customTitle || title || I18n.t('Need help?')}
+				title={!livechat_kill_switch ? customTitle || title || I18n.t('Need help?') : livechat_kill_switch_message}
 				sound={sound}
 				token={token}
 				user={user}
-				agent={agent ? {
+				agent={agent && !livechat_kill_switch ? {
 					_id: agent._id,
 					name: agent.name,
 					status: agent.status,
@@ -440,9 +517,12 @@ export const ChatConnector = ({ ref, ...props }) => (
 				connecting={!!(room && !agent && (showConnecting || queueInfo))}
 				dispatch={dispatch}
 				departments={departments}
+				defaultAvatar={defaultAvatar}
 				allowSwitchingDepartments={allowSwitchingDepartments}
-				conversationFinishedMessage={conversationFinishedMessage || I18n.t('Conversation finished')}
+				conversationFinishedText={conversationFinishedText || I18n.t('Chat finished')}
 				allowRemoveUserData={allowRemoveUserData}
+				transcript={transcript}
+				printTranscript={printTranscript}
 				alerts={alerts}
 				visible={visible}
 				unread={unread}
@@ -460,6 +540,10 @@ export const ChatConnector = ({ ref, ...props }) => (
 				limitTextLength={limitTextLength}
 				incomingCallAlert={incomingCallAlert}
 				ongoingCall={ongoingCall}
+				composerConfig={composerConfig}
+				livechat_kill_switch={livechat_kill_switch}
+				livechat_kill_switch_message={livechat_kill_switch_message}
+				route={route}
 			/>
 		)}
 	</Consumer>

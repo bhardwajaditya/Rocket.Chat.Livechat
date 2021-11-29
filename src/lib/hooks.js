@@ -143,6 +143,16 @@ const api = {
 		parentCall('hideWidget');
 	},
 
+	showPrint() {
+		store.setState({ hidePrint: false });
+		parentCall('showPrint');
+	},
+
+	hidePrint() {
+		store.setState({ hidePrint: true });
+		parentCall('hidePrint');
+	},
+
 	minimizeWidget() {
 		store.setState({ minimized: true });
 		parentCall('closeWidget');

@@ -1,6 +1,5 @@
 import mitt from 'mitt';
 
-
 const log = process.env.NODE_ENV === 'development'
 	? (...args) => window.console.log('%cwidget%c', 'color: red', 'color: initial', ...args)
 	: () => {};
@@ -32,6 +31,8 @@ export const validCallbacks = [
 	'offline-form-submit',
 	'show-widget',
 	'hide-widget',
+	'show-print',
+	'hide-print',
 	'assign-agent',
 	'agent-status-change',
 	'queue-position-change',
@@ -121,6 +122,7 @@ const createWidget = (url) => {
 	iframe.id = 'rocketchat-iframe';
 	iframe.allowTransparency = 'true';
 	iframe.src = url;
+	iframe.name = window.RocketChat.parentURL;
 	iframe.style.width = '100%';
 	iframe.style.height = '100%';
 	iframe.style.border = 'none';
@@ -231,6 +233,14 @@ const api = {
 		emitCallback('hide-widget');
 	},
 
+	showPrint() {
+		emitCallback('show-print');
+	},
+
+	hidePrint() {
+		emitCallback('hide-print');
+	},
+
 	resetDocumentStyle() {
 		document.body.classList.remove('rc-livechat-mobile-full-screen');
 	},
@@ -297,6 +307,14 @@ function showWidget() {
 
 function hideWidget() {
 	callHook('hideWidget');
+}
+
+function showPrint() {
+	callHook('showPrint');
+}
+
+function hidePrint() {
+	callHook('hidePrint');
 }
 
 function maximizeWidget() {
@@ -434,6 +452,8 @@ window.RocketChat.livechat = {
 	setLanguage,
 	showWidget,
 	hideWidget,
+	showPrint,
+	hidePrint,
 	maximizeWidget,
 	minimizeWidget,
 

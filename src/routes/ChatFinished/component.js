@@ -8,7 +8,7 @@ import I18n from '../../i18n';
 import styles from './styles.scss';
 
 const defaultGreeting = I18n.t('Thanks for talking with us');
-const defaultMessage = I18n.t('If you have any other questions, just press the button below to start a new chat.');
+// const defaultMessage = I18n.t('If you have any other questions, just press the button below to start a new chat.');
 
 export default class ChatFinished extends Component {
 	handleClick = () => {
@@ -33,7 +33,8 @@ export default class ChatFinished extends Component {
 		>
 			<Screen.Content>
 				<p className={createClassName(styles, 'chat-finished__greeting')}>{greeting || defaultGreeting}</p>
-				<p className={createClassName(styles, 'chat-finished__message')}>{message || defaultMessage}</p>
+				{/* Viasat */}
+				{/* <p className={createClassName(styles, 'chat-finished__message')}>{message || defaultMessage}</p> */}
 
 				<ButtonGroup>
 					<Button onClick={this.handleClick} stack>{ I18n.t('New Chat') }</Button>

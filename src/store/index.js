@@ -11,6 +11,7 @@ const initialState = {
 		messages: {},
 		settings: {},
 		theme: {},
+		filters: [],
 		triggers: [],
 		departments: [],
 		resources: {},
@@ -34,11 +35,12 @@ const initialState = {
 	visible: true,
 	minimized: true,
 	unread: null,
+	chatClosed: false,
 	incomingCallAlert: null,
 	ongoingCall: null,	// TODO: store call info like url, startTime, timeout, etc here
 };
 
-const dontPersist = ['messages', 'typing', 'loading', 'alerts', 'unread', 'noMoreMessages', 'modal', 'incomingCallAlert', 'ongoingCall'];
+const dontPersist = ['messages', 'typing', 'loading', 'alerts', 'unread', 'noMoreMessages', 'modal', 'idleTimeoutTimers', 'incomingCallAlert', 'ongoingCall'];
 export const store = new Store(initialState, { dontPersist });
 
 if (process.env.NODE_ENV === 'development') {

@@ -4,10 +4,12 @@ import isToday from 'date-fns/isToday';
 import { h } from 'preact';
 
 import I18n from '../../../i18n';
+import store from '../../../store';
 import { getAttachmentUrl, memo, normalizeTransferHistoryMessage, resolveDate } from '../../helpers';
 import { AudioAttachment } from '../AudioAttachment';
 import { FileAttachment } from '../FileAttachment';
 import { ImageAttachment } from '../ImageAttachment';
+import { MessageAction } from '../MessageAction';
 import { MessageAvatars } from '../MessageAvatars';
 import MessageBlocks from '../MessageBlocks';
 import { MessageBubble } from '../MessageBubble';
@@ -34,11 +36,14 @@ const renderContent = ({
 	system,
 	quoted,
 	me,
+	msgSequence,
 	blocks,
 	attachments,
 	attachmentResolver,
 	mid,
 	rid,
+	resetLastAction,
+	actionsVisible,
 }) => [
 	...(attachments || [])
 		.map((attachment) =>
@@ -68,10 +73,16 @@ const renderContent = ({
 				quoted: true,
 				attachments: attachment.attachments,
 				attachmentResolver,
-			})),
+			}))
+			|| (attachment.actions && actionsVisible
+				&& <MessageAction
+					quoted={false}
+					actions={attachment.actions}
+					resetLastAction={resetLastAction}
+				/>),
 		),
 	text && (
-		<MessageBubble inverse={me} quoted={quoted} system={system}>
+		<MessageBubble inverse={me} msgSequence={msgSequence} quoted={quoted} system={system}>
 			<MessageText text={text} system={system} />
 		</MessageBubble>
 	),
@@ -93,17 +104,26 @@ const resolveWebRTCEndCallMessage = ({ webRtcCallEndTs, ts }) => {
 	return `${ I18n.t('Call ended at %{time}', { time }) } ${ I18n.t(' - Lasted %{callDuration}', { callDuration }) }`;
 };
 
-const getSystemMessageText = ({ t, conversationFinishedMessage, transferData, u, webRtcCallEndTs, ts }) =>
+const getSystemMessageText = ({ t, conversationFinishedText, transferData, u, webRtcCallEndTs, ts }) =>
 	(t === MESSAGE_TYPE_ROOM_NAME_CHANGED && I18n.t('Room name changed'))
 	|| (t === MESSAGE_TYPE_USER_ADDED && I18n.t('User added by'))
 	|| (t === MESSAGE_TYPE_USER_REMOVED && I18n.t('User removed by'))
 	|| (t === MESSAGE_TYPE_USER_JOINED && I18n.t('User joined'))
 	|| (t === MESSAGE_TYPE_USER_LEFT && I18n.t('User left'))
 	|| (t === MESSAGE_TYPE_WELCOME && I18n.t('Welcome'))
-	|| (t === MESSAGE_TYPE_LIVECHAT_CLOSED && (conversationFinishedMessage || I18n.t('Conversation finished')))
+	|| (t === MESSAGE_TYPE_LIVECHAT_CLOSED && (conversationFinishedText || I18n.t('Chat finished')))
 	|| (t === MESSAGE_TYPE_LIVECHAT_STARTED && I18n.t('Chat started'))
 	|| (t === MESSAGE_TYPE_LIVECHAT_TRANSFER_HISTORY && normalizeTransferHistoryMessage(transferData, u))
 	|| (t === MESSAGE_WEBRTC_CALL && webRtcCallEndTs && ts && resolveWebRTCEndCallMessage({ webRtcCallEndTs, ts }));
+
+const getName = (message) => {
+	if (!message.u) {
+		return null;
+	}
+
+	const { alias, u: { name } } = message;
+	return alias && name;
+};
 
 const getMessageUsernames = (compact, message) => {
 	if (compact || !message.u) {
@@ -123,9 +143,11 @@ export const Message = memo(({
 	attachmentResolver = getAttachmentUrl,
 	use,
 	me,
+	msgSequence,
 	compact,
 	className,
 	style = {},
+	resetLastAction,
 	...message
 }) => (
 	<MessageContainer
@@ -137,20 +159,25 @@ export const Message = memo(({
 		style={style}
 		system={!!message.t}
 	>
-		{!message.t && <MessageAvatars
+		{store.state.config.settings.livechat_enable_avatar && !message.t && <MessageAvatars
 			avatarResolver={avatarResolver}
 			usernames={getMessageUsernames(compact, message)}
+			isVisitor={me}
+			name={getName(message)}
 		/>}
 		<MessageContent reverse={me}>
 			{renderContent({
 				text: message.t ? getSystemMessageText(message) : message.msg,
 				system: !!message.t,
 				me,
+				msgSequence,
 				attachments: message.attachments,
 				blocks: message.blocks,
 				mid: message._id,
 				rid: message.rid,
 				attachmentResolver,
+				resetLastAction,
+				actionsVisible: message.actionsVisible ? message.actionsVisible : false,
 			})}
 		</MessageContent>
 		{!compact && !message.t && <MessageTime normal={!me} inverse={me} ts={message.ts} />}
