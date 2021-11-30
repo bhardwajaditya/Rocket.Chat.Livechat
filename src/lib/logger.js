@@ -20,8 +20,9 @@ const urlDecomposition = (url) => {
 };
 class Logger {
 	constructor(name, key = 'logs') {
-		const { localStorage } = window;
+		const { localStorage, sessionStorage } = window;
 		this.localStorage = localStorage;
+		this.sessionStorage = sessionStorage;
 		this.name = name;
 		this.localStorageKey = key;
 		this.activeLogs = this.localStorage.getItem(this.localStorageKey) || '';
@@ -31,9 +32,11 @@ class Logger {
 	info(...input) {
 		const message = util.format.apply(util, input);
 		const { room, token } = store.state;
+		const tabID = this.sessionStorage.getItem('sessionId');
 		const newLog = {
 			'@timestamp': new Date().toISOString(),
 			room_id: room?._id,
+			tab_id: tabID,
 			userToken: token,
 			message,
 		};
