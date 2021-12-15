@@ -1,3 +1,4 @@
+import parseISO from 'date-fns/parseISO';
 import { Component } from 'preact';
 
 import { Livechat, useSsl } from '../api';
@@ -147,7 +148,8 @@ export const sortArrayByColumn = (array, column, inverted) => array.sort((a, b) 
 	return 1;
 });
 
-export const normalizeTransferHistoryMessage = (transferData) => {
+
+export const normalizeTransferHistoryMessage = (transferData, sender) => {
 	if (!transferData) {
 		return;
 	}
@@ -157,6 +159,9 @@ export const normalizeTransferHistoryMessage = (transferData) => {
 
 	const transferTypes = {
 		agent: () => {
+			if (!sender.username) {
+				return I18n.t('The chat was transferred to another agent');
+			}
 			const to = transferredTo && (transferredTo.name || transferredTo.username);
 			return I18n.t('%{from} transferred the chat to %{to}', { from, to });
 		},
@@ -164,7 +169,12 @@ export const normalizeTransferHistoryMessage = (transferData) => {
 			const to = nextDepartment && nextDepartment.name;
 			return I18n.t('%{from} transferred the chat to the department %{to}', { from, to });
 		},
-		queue: () => I18n.t('%{from} returned the chat to the queue', { from }),
+		queue: () => {
+			if (!sender.username) {
+				return I18n.t('The chat was moved back to queue');
+			}
+			return I18n.t('%{from} returned the chat to the queue', { from });
+		},
 	};
 
 	return transferTypes[scope]();
@@ -175,7 +185,6 @@ export const parseOfflineMessage = (fields = {}) => {
 	return Object.assign(fields, { host });
 };
 export const normalizeDOMRect = ({ left, top, right, bottom }) => ({ left, top, right, bottom });
-
 
 export const visibility = (() => {
 	if (typeof document.hidden !== 'undefined') {
@@ -246,4 +255,23 @@ export const isActiveSession = () => {
 	const { openSessionIds: [firstSessionId] = [] } = store.state;
 
 	return sessionId === firstSessionId;
+};
+
+export const isMobileDevice = () => window.innerWidth <= 800 && window.innerHeight >= 630;
+
+export const resolveDate = (dateInput) => {
+	switch (typeof dateInput) {
+		case Date: {
+			return dateInput;
+		}
+		case 'object': {
+			return new Date(dateInput.$date);
+		}
+		case 'string': {
+			return parseISO(dateInput);
+		}
+		default: {
+			return new Date(dateInput);
+		}
+	}
 };

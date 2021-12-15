@@ -477,6 +477,8 @@ export const ChatConnector = ({ ref, ...props }) => (
 			lastReadMessageId,
 			triggerAgent,
 			queueInfo,
+			incomingCallAlert,
+			ongoingCall,
 			route,
 		}) => (
 			<ChatContainer
@@ -536,6 +538,8 @@ export const ChatConnector = ({ ref, ...props }) => (
 				nameFieldRegistrationForm={nameFieldRegistrationForm}
 				emailFieldRegistrationForm={emailFieldRegistrationForm}
 				limitTextLength={limitTextLength}
+				incomingCallAlert={incomingCallAlert}
+				ongoingCall={ongoingCall}
 				composerConfig={composerConfig}
 				livechat_kill_switch={livechat_kill_switch}
 				livechat_kill_switch_message={livechat_kill_switch_message}
