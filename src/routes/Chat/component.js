@@ -191,7 +191,7 @@ export default class Chat extends Component {
 						/>}
 					</div>
 				</Screen.Content>
-				{ !livechat_kill_switch ? (
+				{ !livechat_kill_switch && (!composerConfig || (composerConfig && !composerConfig.removeComposer)) ? (
 					<Screen.Footer
 						options={options ? (
 							<FooterOptions>
