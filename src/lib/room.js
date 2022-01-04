@@ -27,7 +27,7 @@ export const onChatClose = async () => {
 		alerts: [],
 		room: null,
 		chatClosed: false,
-		composerConfig: { disable: true, disableText: CLOSE_CHAT, onDisabledComposerClick: () => {} },
+		composerConfig: { disable: true, disableText: CLOSE_CHAT, removeComposer: true, onDisabledComposerClick: () => {} },
 	});
 	if (!isMobile()) {
 		store.setState({ minimized: true });
@@ -47,6 +47,7 @@ export const closeChat = async ({ transcriptRequested } = {}) => {
 	store.setState({ composerConfig: {
 		disable: true,
 		disableText: CLOSE_CHAT,
+		removeComposer: true,
 		onDisabledComposerClick: onChatClose,
 	},
 	chatClosed: true,
