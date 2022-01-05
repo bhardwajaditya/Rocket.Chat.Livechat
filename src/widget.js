@@ -37,6 +37,7 @@ export const validCallbacks = [
 	'agent-status-change',
 	'queue-position-change',
 	'no-agent-online',
+	'drop-trigger-message',
 ];
 
 const callbacks = mitt();
@@ -248,6 +249,10 @@ const api = {
 	setFullScreenDocumentMobile() {
 		smallScreen && document.body.classList.add('rc-livechat-mobile-full-screen');
 	},
+
+	dropTriggerMessage() {
+		emitCallback('drop-trigger-message');
+	},
 };
 
 function pageVisited(change) {
@@ -323,6 +328,10 @@ function maximizeWidget() {
 
 function minimizeWidget() {
 	callHook('minimizeWidget');
+}
+
+function dropTriggerMessage() {
+	callHook('dropTriggerMessage');
 }
 
 function initialize(params) {
@@ -456,6 +465,7 @@ window.RocketChat.livechat = {
 	hidePrint,
 	maximizeWidget,
 	minimizeWidget,
+	dropTriggerMessage,
 
 	// callbacks
 	onChatMaximized(fn) { registerCallback('chat-maximized', fn); },
