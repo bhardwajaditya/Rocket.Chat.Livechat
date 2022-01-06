@@ -16,7 +16,7 @@ let agentPromise;
 
 const registerGuestAndCreateSession = async (triggerAction) => {
 	logger.info('Starting new guest session');
-	const { alerts, room, token } = store.state;
+	const { alerts, room, token, iframe: { guest: { department: guestDepartment } } } = store.state;
 	if (room) {
 		logger.info('Existing room found thus returning it');
 		return room;
@@ -32,7 +32,8 @@ const registerGuestAndCreateSession = async (triggerAction) => {
 	store.setState({ chatClosed: false, composerConfig: { disable: true, disableText: 'Starting chat...' } });
 	try {
 		const { params } = triggerAction;
-		const guest = { token: token || createToken(), department: params && params.department };
+		const department = guestDepartment || (params && params.department);
+		const guest = { token: token || createToken(), ...department && { department } };
 		store.setState(guest);
 		const user = await Livechat.grantVisitor({ visitor: { ...guest } });
 
