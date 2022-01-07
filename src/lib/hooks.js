@@ -162,6 +162,11 @@ const api = {
 		store.setState({ minimized: false });
 		parentCall('openWidget');
 	},
+
+	dropTriggerMessage() {
+		store.setState({ dropTriggerMessage: true });
+		parentCall('dropTriggerMessage');
+	},
 };
 
 const onNewMessage = (event) => {

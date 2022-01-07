@@ -65,11 +65,16 @@ export class ChatContainer extends Component {
 	getRoom = async () => {
 		logger.info('Get room called from the container code');
 		const { alerts, dispatch, room, messages } = this.props;
+		const { dropTriggerMessage, config: { settings: { livechat_chat_already_closed_message: livechatClosedMessage } } } = store.state;
 		const previousMessages = getGreetingMessages(messages);
 
 		if (room) {
 			logger.info('Exisiting room found returning it');
 			return room;
+		}
+		if (dropTriggerMessage) {
+			await dispatch({ composerConfig: { disable: true, disableText: livechatClosedMessage } });
+			return;
 		}
 		logger.info('Disabling composer');
 		await dispatch({ loading: true });
