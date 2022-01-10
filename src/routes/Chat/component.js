@@ -191,7 +191,7 @@ export default class Chat extends Component {
 						/>}
 					</div>
 				</Screen.Content>
-				{ !livechat_kill_switch && (!composerConfig || (composerConfig && !composerConfig.removeComposer)) ? (
+				{ !livechat_kill_switch ? (
 					<Screen.Footer
 						options={options ? (
 							<FooterOptions>
@@ -205,7 +205,7 @@ export default class Chat extends Component {
 									{onRemoveUserData && (
 										<Menu.Item onClick={onRemoveUserData} icon={RemoveIcon}>{I18n.t('Forget/Remove my data')}</Menu.Item>
 									)}
-									{onFinishChat && (
+									{onFinishChat && (!composerConfig || (composerConfig && !composerConfig.removeComposer)) && (
 										<Menu.Item danger onClick={onFinishChat} icon={FinishIcon}>{I18n.t('Finish this chat')}</Menu.Item>
 									)}
 								</Menu.Group>
@@ -220,40 +220,46 @@ export default class Chat extends Component {
 						{ registrationRequired
 							&& <Button loading={loading} disabled={loading} onClick={onRegisterUser} stack>{I18n.t('Chat now')}</Button>
 						}
-						{ !registrationRequired && composerConfig && composerConfig.disable
-							? <Button onClick={composerConfig.onDisabledComposerClick} style={{ width: '100%' }}> {composerConfig.disableText} </Button>
-							: <Composer onUpload={onUpload}
-								onSubmit={this.handleSubmit}
-								onChange={this.handleChangeText}
-								placeholder={I18n.t('Type your message here')}
-								value={text}
-								notifyEmojiSelect={(click) => { this.notifyEmojiSelect = click; }}
-								handleEmojiClick={this.handleEmojiClick}
-								// Viasat : Hide Emoticon pallet
-								//
-								// pre={(
-								// 	<ComposerActions>
-								// 		<ComposerAction className={createClassName(styles, 'emoji-picker-icon')} onClick={this.toggleEmojiPickerState}>
-								// 			<EmojiIcon width={20} height={20} />
-								// 		</ComposerAction>
-								// 	</ComposerActions>
-								// )}
-								post={(
-									<ComposerActions>
-										{text.length === 0 && uploads && (
-											<ComposerAction onClick={this.handleUploadClick}>
-												<PlusIcon width={20} height={20} />
-											</ComposerAction>
-										)}
-										{text.length > 0 && (
-											<ComposerAction onClick={this.handleSendClick}>
-												<SendIcon width={20} height={20} />
-											</ComposerAction>
-										)}
-									</ComposerActions>
-								)}
-								limitTextLength={limitTextLength}
-							/>}
+						{(() => {
+							if (!composerConfig || (composerConfig && !composerConfig.removeComposer)) {
+								if (!registrationRequired && composerConfig && composerConfig.disable) {
+									return <Button onClick={composerConfig.onDisabledComposerClick} style={{ width: '100%' }}> {composerConfig.disableText} </Button>;
+								}
+								return <Composer onUpload={onUpload}
+									onSubmit={this.handleSubmit}
+									onChange={this.handleChangeText}
+									placeholder={I18n.t('Type your message here')}
+									value={text}
+									notifyEmojiSelect={(click) => { this.notifyEmojiSelect = click; }}
+									handleEmojiClick={this.handleEmojiClick}
+									// Viasat : Hide Emoticon pallet
+									//
+									// pre={(
+									// 	<ComposerActions>
+									// 		<ComposerAction className={createClassName(styles, 'emoji-picker-icon')} onClick={this.toggleEmojiPickerState}>
+									// 			<EmojiIcon width={20} height={20} />
+									// 		</ComposerAction>
+									// 	</ComposerActions>
+									// )}
+									post={(
+										<ComposerActions>
+											{text.length === 0 && uploads && (
+												<ComposerAction onClick={this.handleUploadClick}>
+													<PlusIcon width={20} height={20} />
+												</ComposerAction>
+											)}
+											{text.length > 0 && (
+												<ComposerAction onClick={this.handleSendClick}>
+													<SendIcon width={20} height={20} />
+												</ComposerAction>
+											)}
+										</ComposerActions>
+									)}
+									limitTextLength={limitTextLength}
+								/>;
+							}
+							return null;
+						})()}
 					</Screen.Footer>
 				) : null}
 			</FilesDropTargetWrapper>
