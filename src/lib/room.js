@@ -2,9 +2,9 @@ import { route } from 'preact-router';
 
 import { Livechat } from '../api';
 import { CallStatus, isCallOngoing } from '../components/Calls/CallStatus';
-import { setCookies, upsert, canRenderMessage, createToken } from '../components/helpers';
+import { setCookies, upsert, canRenderMessage } from '../components/helpers';
 import I18n from '../i18n';
-import { store } from '../store';
+import { store, initialState } from '../store';
 import { normalizeAgent } from './api';
 import Commands from './commands';
 import constants from './constants';
@@ -12,6 +12,7 @@ import { handleIdleTimeout } from './idleTimeout';
 import logger from './logger';
 import { loadConfig, processUnread } from './main';
 import { parentCall } from './parentCall';
+import { createToken } from './random';
 import { normalizeMessage, normalizeMessages } from './threads';
 import { handleTranscript } from './transcript';
 import { isMobile } from './util';
@@ -21,6 +22,14 @@ const commands = new Commands();
 export const CLOSE_CHAT = 'Close Chat';
 
 export const onChatClose = async () => {
+	const { config: { settings: { clearLocalStorageWhenChatEnded } = {} } = {} } = store.state;
+
+	if (clearLocalStorageWhenChatEnded) {
+		// exclude UI-affecting flags
+		const { minimized, visible, undocked, expanded, businessUnit, ...initial } = initialState();
+		await store.setState(initial);
+	}
+
 	await store.setState({ loading: true });
 	await loadConfig();
 	await store.setState({
@@ -43,6 +52,7 @@ export const closeChat = async ({ transcriptRequested } = {}) => {
 	if (!transcriptRequested) {
 		await handleTranscript();
 	}
+
 	parentCall('callback', 'chat-ended');
 	store.setState({ composerConfig: {
 		disable: true,
@@ -219,7 +229,7 @@ const isAgentHidden = () => {
 
 const transformAgentInformationOnMessage = (message) => {
 	const { user } = store.state;
-	if (message.u && message.u._id !== user._id && isAgentHidden()) {
+	if (message && user && message.u && message.u._id !== user._id && isAgentHidden()) {
 		return { ...message, u: { _id: message.u._id } };
 	}
 

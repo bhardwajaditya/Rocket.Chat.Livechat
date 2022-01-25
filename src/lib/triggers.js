@@ -1,7 +1,7 @@
 import { route } from 'preact-router';
 
 import { Livechat } from '../api';
-import { upsert, createToken, asyncForEach } from '../components/helpers';
+import { upsert, asyncForEach } from '../components/helpers';
 import I18n from '../i18n';
 import store from '../store';
 import { normalizeAgent } from './api';
@@ -9,6 +9,7 @@ import CustomFields from './customFields';
 import logger from './logger';
 import { processUnread } from './main';
 import { parentCall, runCallbackEventEmitter } from './parentCall';
+import { createToken } from './random';
 import { assignRoom } from './room';
 
 const agentCacheExpiry = 3600000;

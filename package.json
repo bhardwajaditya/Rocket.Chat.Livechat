@@ -1,6 +1,6 @@
 {
 	"name": "@rocket.chat/livechat",
-	"version": "1.9.4",
+	"version": "1.12.0",
 	"files": [
 		"/build"
 	],
@@ -87,11 +87,11 @@
 		"@kossnocorp/desvg": "^0.2.0",
 		"@rocket.chat/sdk": "git+https://github.com/WideChat/Rocket.Chat.js.SDK.git#multiple-clients",
 		"@rocket.chat/ui-kit": "^0.14.1",
+		"crypto-js": "^4.1.1",
 		"aws4-browser": "^1.0.0",
 		"css-vars-ponyfill": "^2.3.2",
 		"date-fns": "^2.15.0",
 		"desvg": "^1.0.2",
-		"dompurify": "^2.2.6",
 		"emoji-mart": "^3.0.0",
 		"history": "^5.0.0",
 		"i18nline": "^2.0.1",

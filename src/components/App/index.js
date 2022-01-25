@@ -211,9 +211,13 @@ export class App extends Component {
 		expanded,
 		alerts,
 		modal,
+		config,
 		composerConfig,
 	}, { initialized, poppedOut }) => {
 		if (!initialized) {
+			return null;
+		}
+		if (!config.enabled) {
 			return null;
 		}
 		const screenProps = {
