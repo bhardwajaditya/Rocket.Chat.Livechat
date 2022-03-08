@@ -294,6 +294,10 @@ function setGuestName(name) {
 	callHook('setGuestName', name);
 }
 
+function setGuestPhone(phone) {
+	callHook('setGuestPhone', phone);
+}
+
 function setGuestEmail(email) {
 	callHook('setGuestEmail', email);
 }
@@ -378,6 +382,9 @@ function initialize(params) {
 				continue;
 			case 'guestName':
 				setGuestName(params[method]);
+				continue;
+			case 'guestPhone':
+				setGuestPhone(params[method]);
 				continue;
 			case 'guestEmail':
 				setGuestEmail(params[method]);
@@ -467,6 +474,7 @@ window.RocketChat.livechat = {
 	clearDepartment,
 	setGuestToken,
 	setGuestName,
+	setGuestPhone,
 	setGuestEmail,
 	setAgent,
 	registerGuest,
