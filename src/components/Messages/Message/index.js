@@ -5,7 +5,8 @@ import { h } from 'preact';
 
 import I18n from '../../../i18n';
 import store from '../../../store';
-import { getAttachmentUrl, memo, normalizeTransferHistoryMessage, resolveDate } from '../../helpers';
+import { Button } from '../../Button';
+import { createClassName, getAttachmentUrl, memo, normalizeTransferHistoryMessage, resolveDate } from '../../helpers';
 import { AudioAttachment } from '../AudioAttachment';
 import { FileAttachment } from '../FileAttachment';
 import { ImageAttachment } from '../ImageAttachment';
@@ -30,6 +31,12 @@ import {
 	MESSAGE_TYPE_LIVECHAT_TRANSFER_HISTORY,
 	MESSAGE_WEBRTC_CALL,
 } from '../constants';
+import styles from './styles.scss';
+
+const onClickSurvey = () => {
+	const { postChatUrl } = store.state;
+	window.open(postChatUrl, '_blank');
+};
 
 const renderContent = ({
 	text,
@@ -44,6 +51,7 @@ const renderContent = ({
 	rid,
 	resetLastAction,
 	actionsVisible,
+	showPostChatUrl,
 }) => [
 	...(attachments || [])
 		.map((attachment) =>
@@ -83,7 +91,9 @@ const renderContent = ({
 		),
 	text && (
 		<MessageBubble inverse={me} msgSequence={msgSequence} quoted={quoted} system={system}>
-			<MessageText text={text} system={system} />
+			{showPostChatUrl && <MessageText className = {createClassName(styles, 'surveyText__content')} system={system} text={'Thank you for chatting with us! How did we do today?'} />}
+			{showPostChatUrl && <Button onClick={() => onClickSurvey()} className = {createClassName(styles, 'surveyButton__content')}> Feedback Survey</Button>}
+			<MessageText style={showPostChatUrl && { width: '300px' }} text={text} system={system} />
 		</MessageBubble>
 	),
 	blocks && (
@@ -138,6 +148,14 @@ const getMessageUsernames = (compact, message) => {
 	return [username];
 };
 
+const shouldDisplayPostChatSurvey = (message) => {
+	const { postChatUrl } = store.state;
+	if (message.t === MESSAGE_TYPE_LIVECHAT_CLOSED && postChatUrl) {
+		return true;
+	}
+	return false;
+};
+
 export const Message = memo(({
 	avatarResolver,
 	attachmentResolver = getAttachmentUrl,
@@ -178,6 +196,7 @@ export const Message = memo(({
 				attachmentResolver,
 				resetLastAction,
 				actionsVisible: message.actionsVisible ? message.actionsVisible : false,
+				showPostChatUrl: shouldDisplayPostChatSurvey(message),
 			})}
 		</MessageContent>
 		{!compact && !message.t && <MessageTime normal={!me} inverse={me} ts={message.ts} />}

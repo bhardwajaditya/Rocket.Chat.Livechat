@@ -38,10 +38,11 @@ export const initialState = () => ({
 	incomingCallAlert: null,
 	ongoingCall: null,	// TODO: store call info like url, startTime, timeout, etc here
 	businessUnit: null,
+	postChatUrl: null,
 });
 
-const dontPersist = ['messages', 'typing', 'loading', 'alerts', 'unread', 'noMoreMessages', 'modal', 'idleTimeoutTimers', 'incomingCallAlert', 'ongoingCall'];
-export const store = new Store(initialState(), { dontPersist });
+const dontPersist = ['messages', 'typing', 'loading', 'alerts', 'unread', 'noMoreMessages', 'modal', 'idleTimeoutTimers', 'incomingCallAlert', 'ongoingCall', 'postChatUrl'];
+export const store = new Store(initialState, { dontPersist });
 
 if (process.env.NODE_ENV === 'development') {
 	store.on('change', ([, , partialState]) => {

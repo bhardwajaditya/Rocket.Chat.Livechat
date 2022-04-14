@@ -1,0 +1,28 @@
+@import '../../../styles/colors';
+@import '../../../styles/variables';
+
+.surveyButton {
+
+	&__content {
+		width: 200px;
+		display: flex;
+		flex-direction: row;
+
+		padding: 10px;
+		margin: 8px auto;
+
+		line-height: 16px;
+		justify-content: space-around;
+
+		border: 1px solid #abdbe3;
+		background-color: #abdbe3;
+		color: black;
+		border-radius: 10px;
+	}
+}
+
+.surveyText {
+	&__content {
+		width: 300px;
+	}
+}
