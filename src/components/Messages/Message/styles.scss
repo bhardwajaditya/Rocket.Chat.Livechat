@@ -2,22 +2,24 @@
 @import '../../../styles/variables';
 
 .surveyButton {
-
 	&__content {
-		width: 200px;
 		display: flex;
+
 		flex-direction: row;
 
-		padding: 10px;
+		width: 200px;
+
 		margin: 8px auto;
+		padding: 10px;
+
+		color: black;
+
+		border: 1px solid #abdbe3;
+		border-radius: 10px;
+		background-color: #abdbe3;
 
 		line-height: 16px;
 		justify-content: space-around;
-
-		border: 1px solid #abdbe3;
-		background-color: #abdbe3;
-		color: black;
-		border-radius: 10px;
 	}
 }
 
