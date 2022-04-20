@@ -120,6 +120,13 @@ const handleComposerOnMessage = async (message) => {
 	}
 };
 
+const checkForPostChatUrlInMessage = async (message) => {
+	const { customFields = {} } = message;
+	if (customFields.postChatUrl) {
+		await store.setState({ postChatUrl: customFields.postChatUrl });
+	}
+};
+
 // TODO: use a separate event to listen to call start event. Listening on the message type isn't a good solution
 export const processIncomingCallMessage = async (message) => {
 	const { alerts } = store.state;
@@ -161,6 +168,7 @@ const processMessage = async (message) => {
 		await processIncomingCallMessage(message);
 	}
 
+	checkForPostChatUrlInMessage(message);
 	handleComposerOnMessage(message);
 };
 
@@ -328,6 +336,7 @@ export const loadMessages = async () => {
 		if (oldMessage && oldMessage.actionsVisible !== undefined) {
 			message.actionsVisible = oldMessage.actionsVisible;
 		}
+		checkForPostChatUrlInMessage(message);
 		handleComposerOnMessage(message);
 		return message;
 	});
@@ -422,6 +431,7 @@ export const loadMoreMessages = async () => {
 		if (oldMessage && oldMessage.actionsVisible !== undefined) {
 			message.actionsVisible = oldMessage.actionsVisible;
 		}
+		checkForPostChatUrlInMessage(message);
 		handleComposerOnMessage(message);
 		return message;
 	});
