@@ -91,8 +91,7 @@ const renderContent = ({
 		),
 	text && (
 		<MessageBubble inverse={me} msgSequence={msgSequence} quoted={quoted} system={system}>
-			{showPostChatUrl && <MessageText className = {createClassName(styles, 'surveyText__content')} system={system} text={'Thank you for chatting with us! How did we do today?'} />}
-			{showPostChatUrl && <Button onClick={() => onClickSurvey()} className = {createClassName(styles, 'surveyButton__content')}> Feedback Survey</Button>}
+			{showPostChatUrl && <Button onClick={() => onClickSurvey()} className = {createClassName(styles, 'surveyButton__content')}>Give Feedback</Button>}
 			<MessageText style={showPostChatUrl && { width: '300px' }} text={text} system={system} />
 		</MessageBubble>
 	),
