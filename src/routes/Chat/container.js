@@ -11,7 +11,7 @@ import logger from '../../lib/logger';
 import { loadConfig } from '../../lib/main';
 import { parentCall, runCallbackEventEmitter } from '../../lib/parentCall';
 import { createToken } from '../../lib/random';
-import { initRoom, closeChatFromModal, loadMessages, loadMoreMessages, defaultRoomParams, getGreetingMessages, onChatClose, CLOSE_CHAT } from '../../lib/room';
+import { initRoom, loadMessages, loadMoreMessages, defaultRoomParams, getGreetingMessages, onChatClose, CLOSE_CHAT } from '../../lib/room';
 import triggers from '../../lib/triggers';
 import store, { Consumer } from '../../store';
 import Chat from './component';
@@ -217,6 +217,7 @@ export class ChatContainer extends Component {
 	}
 
 	onFinishChat = async () => {
+		logger.info('User closing chat from modal');
 		const { composerConfig } = this.props;
 		if (composerConfig && composerConfig.disableText === CLOSE_CHAT) {
 			onChatClose();
@@ -244,7 +245,6 @@ export class ChatContainer extends Component {
 			await dispatch({ alerts: (alerts.push(alert), alerts) });
 		} finally {
 			await dispatch({ loading: false });
-			await closeChatFromModal();
 		}
 	}
 
@@ -371,8 +371,16 @@ export class ChatContainer extends Component {
 		});
 	}
 
+	async handleClosedRoom() {
+		const { chatClosed } = store.state;
+		if (chatClosed) {
+			await onChatClose();
+		}
+	}
+
 	async componentDidMount() {
 		await this.checkConnectingAgent();
+		await this.handleClosedRoom();
 		loadMessages();
 	}
 

@@ -66,17 +66,6 @@ export const closeChat = async ({ transcriptRequested } = {}) => {
 	logger.sendLogsToES();
 };
 
-export const closeChatFromModal = async ({ transcriptRequested } = {}) => {
-	logger.info('User closing chat from modal');
-	store.setState({ alerts: [] });
-	if (!transcriptRequested) {
-		await handleTranscript();
-	}
-	parentCall('callback', 'chat-ended');
-	onChatClose();
-};
-
-
 const disableComposer = (msg) => {
 	const defaultText = 'Please Wait';
 	const result = { disable: false, disableText: defaultText };
