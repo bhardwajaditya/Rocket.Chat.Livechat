@@ -113,6 +113,14 @@ const resolveWebRTCEndCallMessage = ({ webRtcCallEndTs, ts }) => {
 	return `${ I18n.t('Call ended at %{time}', { time }) } ${ I18n.t(' - Lasted %{callDuration}', { callDuration }) }`;
 };
 
+const getClosingMessaageText = (conversationFinishedText) => {
+	const { postChatUrl, config: { messages: { escalatedConversationFinishedText } } } = store.state;
+	if (postChatUrl) {
+		return escalatedConversationFinishedText;
+	}
+	return conversationFinishedText || I18n.t('Chat finished');
+};
+
 const getSystemMessageText = ({ t, conversationFinishedText, transferData, u, webRtcCallEndTs, ts }) =>
 	(t === MESSAGE_TYPE_ROOM_NAME_CHANGED && I18n.t('Room name changed'))
 	|| (t === MESSAGE_TYPE_USER_ADDED && I18n.t('User added by'))
@@ -120,7 +128,7 @@ const getSystemMessageText = ({ t, conversationFinishedText, transferData, u, we
 	|| (t === MESSAGE_TYPE_USER_JOINED && I18n.t('User joined'))
 	|| (t === MESSAGE_TYPE_USER_LEFT && I18n.t('User left'))
 	|| (t === MESSAGE_TYPE_WELCOME && I18n.t('Welcome'))
-	|| (t === MESSAGE_TYPE_LIVECHAT_CLOSED && (conversationFinishedText || I18n.t('Chat finished')))
+	|| (t === MESSAGE_TYPE_LIVECHAT_CLOSED && getClosingMessaageText(conversationFinishedText))
 	|| (t === MESSAGE_TYPE_LIVECHAT_STARTED && I18n.t('Chat started'))
 	|| (t === MESSAGE_TYPE_LIVECHAT_TRANSFER_HISTORY && normalizeTransferHistoryMessage(transferData, u))
 	|| (t === MESSAGE_WEBRTC_CALL && webRtcCallEndTs && ts && resolveWebRTCEndCallMessage({ webRtcCallEndTs, ts }));
