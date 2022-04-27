@@ -11,7 +11,7 @@ import logger from '../../lib/logger';
 import { loadConfig } from '../../lib/main';
 import { parentCall, runCallbackEventEmitter } from '../../lib/parentCall';
 import { createToken } from '../../lib/random';
-import { initRoom, loadMessages, loadMoreMessages, defaultRoomParams, getGreetingMessages, onChatClose, CLOSE_CHAT } from '../../lib/room';
+import { initRoom, loadMessages, loadMoreMessages, defaultRoomParams, getGreetingMessages, onChatClose, reloadMessages, CLOSE_CHAT } from '../../lib/room';
 import triggers from '../../lib/triggers';
 import store, { Consumer } from '../../store';
 import Chat from './component';
@@ -46,8 +46,9 @@ export class ChatContainer extends Component {
 		const { room } = this.props;
 		const { room: stateRoom } = this.state;
 		if (room && (!stateRoom || room._id !== stateRoom._id)) {
+			logger.info(`Different room found: Old Room ${ stateRoom && stateRoom._id }, New Room ${ room._id }`);
 			this.state.room = room;
-			setTimeout(loadMessages, 500);
+			setTimeout(reloadMessages, 500);
 		}
 	}
 
@@ -432,6 +433,8 @@ export class ChatContainer extends Component {
 			onRegisterUser={this.onRegisterUser}
 			resetLastAction={this.resetLastAction}
 			composerConfig={props.composerConfig}
+			postChatUrl={props.postChatUrl}
+			chatClosed={props.chatClosed}
 			livechat_kill_switch={props.livechat_kill_switch}
 			livechat_kill_switch_message={props.livechat_kill_switch_message}
 		/>
@@ -488,6 +491,8 @@ export const ChatConnector = ({ ref, ...props }) => (
 			dispatch,
 			alerts,
 			composerConfig,
+			postChatUrl,
+			chatClosed,
 			visible,
 			unread,
 			lastReadMessageId,
@@ -557,6 +562,8 @@ export const ChatConnector = ({ ref, ...props }) => (
 				incomingCallAlert={incomingCallAlert}
 				ongoingCall={ongoingCall}
 				composerConfig={composerConfig}
+				postChatUrl={postChatUrl}
+				chatClosed={chatClosed}
 				livechat_kill_switch={livechat_kill_switch}
 				livechat_kill_switch_message={livechat_kill_switch_message}
 				route={route}

@@ -34,9 +34,10 @@ export const onChatClose = async () => {
 	await loadConfig();
 	await store.setState({
 		alerts: [],
-		room: null,
 		chatClosed: false,
 		composerConfig: { disable: true, disableText: CLOSE_CHAT, removeComposer: !isMobile(), onDisabledComposerClick: () => {} },
+		postChatUrl: null,
+		room: null,
 	});
 	if (!isMobile()) {
 		store.setState({ minimized: true });
@@ -401,6 +402,11 @@ export const loadMessages = async () => {
 			processIncomingCallMessage(latestCallMessage);
 		}
 	}
+};
+
+export const reloadMessages = async () => {
+	store.setState({ loading: true, messages: [] });
+	await loadMessages();
 };
 
 export const loadMoreMessages = async () => {

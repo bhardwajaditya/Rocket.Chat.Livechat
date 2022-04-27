@@ -30,7 +30,7 @@ const registerGuestAndCreateSession = async (triggerAction) => {
 
 	logger.info('Disabling composer initially');
 	store.setState({ loading: true });
-	store.setState({ chatClosed: false, composerConfig: { disable: true, disableText: 'Starting chat...' } });
+	store.setState({ chatClosed: false, postChatUrl: null, composerConfig: { disable: true, disableText: 'Starting chat...' } });
 	try {
 		const { params } = triggerAction;
 		const department = guestDepartment || (params && params.department);

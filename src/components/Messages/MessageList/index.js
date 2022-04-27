@@ -132,6 +132,8 @@ export class MessageList extends MemoizedComponent {
 		conversationFinishedText,
 		typingUsernames,
 		resetLastAction,
+		postChatUrl,
+		chatClosed,
 	}) => {
 		const items = [];
 		const { incomingCallAlert } = store.state;
@@ -175,6 +177,8 @@ export class MessageList extends MemoizedComponent {
 					compact={nextMessage && message.u && nextMessage.u && message.u._id === nextMessage.u._id && !nextMessage.t}
 					conversationFinishedText={conversationFinishedText}
 					resetLastAction={resetLastAction}
+					postChatUrl={postChatUrl}
+					chatClosed={chatClosed}
 					{...message}
 				/>,
 			);

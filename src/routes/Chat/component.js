@@ -137,6 +137,8 @@ export default class Chat extends Component {
 		dispatch,
 		resetLastAction,
 		composerConfig,
+		postChatUrl,
+		chatClosed,
 		livechat_kill_switch,
 		...props
 	}, {
@@ -180,6 +182,8 @@ export default class Chat extends Component {
 							onScrollTo={this.handleScrollTo}
 							resetLastAction={resetLastAction}
 							handleEmojiClick={this.handleEmojiClick}
+							postChatUrl={postChatUrl}
+							chatClosed={chatClosed}
 						/>
 						{this.state.emojiPickerActive && <Picker
 							style={{ position: 'absolute', zIndex: 10, bottom: 0, maxWidth: '90%', left: 20, maxHeight: '90%' }}

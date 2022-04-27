@@ -33,7 +33,7 @@ import {
 } from '../constants';
 import styles from './styles.scss';
 
-const onClickSurvey = () => {
+const onClickFeedback = () => {
 	const { postChatUrl } = store.state;
 	window.open(postChatUrl, '_blank');
 };
@@ -91,7 +91,7 @@ const renderContent = ({
 		),
 	text && (
 		<MessageBubble inverse={me} msgSequence={msgSequence} quoted={quoted} system={system}>
-			{showPostChatUrl && <Button onClick={() => onClickSurvey()} className = {createClassName(styles, 'surveyButton__content')}>Give Feedback</Button>}
+			{showPostChatUrl && <Button onClick={() => onClickFeedback()} className = {createClassName(styles, 'surveyButton__content')}>Give Feedback</Button>}
 			<MessageText style={showPostChatUrl && { width: '300px' }} text={text} system={system} />
 		</MessageBubble>
 	),
@@ -155,9 +155,8 @@ const getMessageUsernames = (compact, message) => {
 	return [username];
 };
 
-const shouldDisplayPostChatSurvey = (message) => {
-	const { postChatUrl } = store.state;
-	if (message.t === MESSAGE_TYPE_LIVECHAT_CLOSED && postChatUrl) {
+const showPostChatFeedback = ({ chatClosed, message, postChatUrl }) => {
+	if (chatClosed && postChatUrl && message.t === MESSAGE_TYPE_LIVECHAT_CLOSED) {
 		return true;
 	}
 	return false;
@@ -173,6 +172,8 @@ export const Message = memo(({
 	className,
 	style = {},
 	resetLastAction,
+	postChatUrl,
+	chatClosed,
 	...message
 }) => (
 	<MessageContainer
@@ -203,7 +204,7 @@ export const Message = memo(({
 				attachmentResolver,
 				resetLastAction,
 				actionsVisible: message.actionsVisible ? message.actionsVisible : false,
-				showPostChatUrl: shouldDisplayPostChatSurvey(message),
+				showPostChatUrl: showPostChatFeedback({ chatClosed, message, postChatUrl }),
 			})}
 		</MessageContent>
 		{!compact && !message.t && <MessageTime normal={!me} inverse={me} ts={message.ts} />}
