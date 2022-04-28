@@ -4,6 +4,7 @@ import isToday from 'date-fns/isToday';
 import { h } from 'preact';
 
 import I18n from '../../../i18n';
+import { handleTranscript } from '../../../lib/transcript';
 import store from '../../../store';
 import { Button } from '../../Button';
 import { createClassName, getAttachmentUrl, memo, normalizeTransferHistoryMessage, resolveDate } from '../../helpers';
@@ -38,6 +39,10 @@ const onClickFeedback = () => {
 	window.open(postChatUrl, '_blank');
 };
 
+const onClickTranscript = async () => {
+	await handleTranscript();
+};
+
 const renderContent = ({
 	text,
 	system,
@@ -52,6 +57,7 @@ const renderContent = ({
 	resetLastAction,
 	actionsVisible,
 	showPostChatUrl,
+	isChatClosed,
 }) => [
 	...(attachments || [])
 		.map((attachment) =>
@@ -91,8 +97,9 @@ const renderContent = ({
 		),
 	text && (
 		<MessageBubble inverse={me} msgSequence={msgSequence} quoted={quoted} system={system}>
-			{showPostChatUrl && <Button onClick={() => onClickFeedback()} className = {createClassName(styles, 'surveyButton__content')}>Give Feedback</Button>}
 			<MessageText style={showPostChatUrl && { width: '300px' }} text={text} system={system} />
+			{showPostChatUrl && <Button onClick={() => onClickFeedback()} className = {createClassName(styles, 'closedChatButton__content')}> { I18n.t('Give Feedback') } </Button>}
+			{isChatClosed && store.state.config.settings.transcript && <Button onClick={() => onClickTranscript()} className = {createClassName(styles, 'closedChatButton__content')}> { I18n.t('Save Transcript') } </Button>}
 		</MessageBubble>
 	),
 	blocks && (
@@ -205,6 +212,7 @@ export const Message = memo(({
 				resetLastAction,
 				actionsVisible: message.actionsVisible ? message.actionsVisible : false,
 				showPostChatUrl: showPostChatFeedback({ chatClosed, message, postChatUrl }),
+				isChatClosed: message.t === MESSAGE_TYPE_LIVECHAT_CLOSED,
 			})}
 		</MessageContent>
 		{!compact && !message.t && <MessageTime normal={!me} inverse={me} ts={message.ts} />}

@@ -14,7 +14,6 @@ import { loadConfig, processUnread } from './main';
 import { parentCall } from './parentCall';
 import { createToken } from './random';
 import { normalizeMessage, normalizeMessages } from './threads';
-import { handleTranscript } from './transcript';
 import { isMobile } from './util';
 
 
@@ -35,7 +34,7 @@ export const onChatClose = async () => {
 	await store.setState({
 		alerts: [],
 		chatClosed: false,
-		composerConfig: { disable: true, disableText: CLOSE_CHAT, removeComposer: !isMobile(), onDisabledComposerClick: () => {} },
+		composerConfig: { disable: true, disableText: CLOSE_CHAT, removeComposer: true, onDisabledComposerClick: () => {} },
 		postChatUrl: null,
 		room: null,
 	});
@@ -47,18 +46,15 @@ export const onChatClose = async () => {
 	await store.setState({ loading: false });
 };
 
-export const closeChat = async ({ transcriptRequested } = {}) => {
+export const closeChat = async () => {
 	store.setState({ alerts: [] });
 	logger.info('Closing chat');
-	if (!transcriptRequested) {
-		await handleTranscript();
-	}
 
 	parentCall('callback', 'chat-ended');
 	store.setState({ composerConfig: {
 		disable: true,
 		disableText: CLOSE_CHAT,
-		removeComposer: !isMobile(),
+		removeComposer: true,
 		onDisabledComposerClick: onChatClose,
 	},
 	chatClosed: true,

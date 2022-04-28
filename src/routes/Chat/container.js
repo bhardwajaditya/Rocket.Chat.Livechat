@@ -328,7 +328,7 @@ export class ChatContainer extends Component {
 	}
 
 	showOptionsMenu = () =>
-		this.canSwitchDepartment() || this.canFinishChat() || this.canRemoveUserData()
+		this.canSwitchDepartment() || this.canPrintTranscript() || this.canRemoveUserData()
 
 
 	async handleConnectingAgentAlert(connecting, message) {

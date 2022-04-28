@@ -14,7 +14,6 @@ import { Screen } from '../../components/Screen';
 import { createClassName } from '../../components/helpers';
 import I18n from '../../i18n';
 import ChangeIcon from '../../icons/change.svg';
-import FinishIcon from '../../icons/finish.svg';
 import PlusIcon from '../../icons/plus.svg';
 import PrintIcon from '../../icons/print.svg';
 import RemoveIcon from '../../icons/remove.svg';
@@ -208,9 +207,6 @@ export default class Chat extends Component {
 									)}
 									{onRemoveUserData && (
 										<Menu.Item onClick={onRemoveUserData} icon={RemoveIcon}>{I18n.t('Forget/Remove my data')}</Menu.Item>
-									)}
-									{onFinishChat && (!composerConfig || (composerConfig && !composerConfig.removeComposer)) && (
-										<Menu.Item danger onClick={onFinishChat} icon={FinishIcon}>{I18n.t('Finish this chat')}</Menu.Item>
 									)}
 								</Menu.Group>
 							</FooterOptions>

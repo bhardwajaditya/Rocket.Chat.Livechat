@@ -48,7 +48,6 @@ class ScreenHeader extends Component {
 		onEnableNotifications,
 		onDisableNotifications,
 		// onOpenWindow,
-		options,
 		onFinishChat,
 	}) => (
 		<Header
@@ -102,7 +101,7 @@ class ScreenHeader extends Component {
 							</Header.Action>
 						</Tooltip.Trigger>
 					)} */}
-					{options && onFinishChat && (
+					{onFinishChat && (
 						<Tooltip.Trigger content={I18n.t('End chat')}>
 							<Header.Action
 								aria-label={I18n.t('End chat')}
