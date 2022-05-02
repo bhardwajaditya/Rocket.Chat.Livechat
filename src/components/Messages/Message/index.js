@@ -124,9 +124,9 @@ const resolveWebRTCEndCallMessage = ({ webRtcCallEndTs, ts }) => {
 const getClosingMessaageText = (conversationFinishedText) => {
 	const { postChatUrl, config: { messages: { escalatedConversationFinishedText } } } = store.state;
 	if (postChatUrl) {
-		return escalatedConversationFinishedText;
+		return escalatedConversationFinishedText || conversationFinishedText;
 	}
-	return conversationFinishedText || I18n.t('Chat finished');
+	return conversationFinishedText;
 };
 
 const getSystemMessageText = ({ t, conversationFinishedText, transferData, u, webRtcCallEndTs, ts }) =>
@@ -164,7 +164,9 @@ const getMessageUsernames = (compact, message) => {
 };
 
 const showPostChatFeedback = ({ chatClosed, message, postChatUrl }) => {
-	if (chatClosed && postChatUrl && message.t === MESSAGE_TYPE_LIVECHAT_CLOSED) {
+	const { config: { settings: { isPostChatFeedbackEnabled } } } = store.state;
+
+	if (isPostChatFeedbackEnabled && chatClosed && postChatUrl && message.t === MESSAGE_TYPE_LIVECHAT_CLOSED) {
 		return true;
 	}
 	return false;
