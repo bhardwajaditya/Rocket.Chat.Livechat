@@ -122,7 +122,7 @@ const api = {
 	},
 
 	setGuestPhone(phone) {
-		updateIframeGuestData({ phone });
+		updateIframeGuestData({ phone: phone ?? '' });
 	},
 
 	setGuestEmail(email) {
