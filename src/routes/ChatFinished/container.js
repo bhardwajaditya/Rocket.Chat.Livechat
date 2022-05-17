@@ -2,6 +2,7 @@ import { h, Component } from 'preact';
 import { route } from 'preact-router';
 
 import I18n from '../../i18n';
+import { isMobile } from '../../lib/util';
 import { Consumer } from '../../store';
 import ChatFinished from './component';
 
@@ -11,9 +12,12 @@ export class ChatFinishedContainer extends Component {
 		route('/');
 	}
 
-	render = (props) => (
-		<ChatFinished {...props} onRedirectChat={this.handleRedirect} />
-	)
+	render = (props) => {
+		if (!isMobile()) {
+			return route('/');
+		}
+		return <ChatFinished {...props} onRedirectChat={this.handleRedirect} />;
+	}
 }
 
 
