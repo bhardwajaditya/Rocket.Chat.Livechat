@@ -211,7 +211,7 @@ export default class Chat extends Component {
 								</Menu.Group>
 							</FooterOptions>
 						) : null}
-						limit={limitTextLength
+						limit={limitTextLength && !store.state.chatClosed && (!composerConfig || (composerConfig && !composerConfig.disable))
 							? <CharCounter
 								limitTextLength={limitTextLength}
 								textLength={text.length}
