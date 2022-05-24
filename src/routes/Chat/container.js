@@ -226,7 +226,7 @@ export class ChatContainer extends Component {
 		}
 
 		const { success } = await ModalManager.confirm({
-			text: I18n.t('All of this conversation history will be lost if you close this chat. Continue?'),
+			text: I18n.t(this.props.livechat_close_modal_message),
 		});
 
 		if (!success) {
@@ -437,6 +437,7 @@ export class ChatContainer extends Component {
 			chatClosed={props.chatClosed}
 			livechat_kill_switch={props.livechat_kill_switch}
 			livechat_kill_switch_message={props.livechat_kill_switch_message}
+			livechat_close_modal_message={props.Livechat_close_modal_message}
 		/>
 	)
 }
@@ -460,6 +461,7 @@ export const ChatConnector = ({ ref, ...props }) => (
 					limitTextLength,
 					livechat_kill_switch,
 					livechat_kill_switch_message,
+					livechat_close_modal_message,
 				} = {},
 				messages: {
 					conversationFinishedText,
@@ -566,6 +568,7 @@ export const ChatConnector = ({ ref, ...props }) => (
 				chatClosed={chatClosed}
 				livechat_kill_switch={livechat_kill_switch}
 				livechat_kill_switch_message={livechat_kill_switch_message}
+				livechat_close_modal_message={livechat_close_modal_message}
 				route={route}
 			/>
 		)}
