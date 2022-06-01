@@ -438,6 +438,7 @@ export class ChatContainer extends Component {
 			livechat_kill_switch={props.livechat_kill_switch}
 			livechat_kill_switch_message={props.livechat_kill_switch_message}
 			livechat_close_modal_message={props.Livechat_close_modal_message}
+			enableTranscriptMobile = {props.enableTranscriptMobile}
 		/>
 	)
 }
@@ -462,6 +463,7 @@ export const ChatConnector = ({ ref, ...props }) => (
 					livechat_kill_switch,
 					livechat_kill_switch_message,
 					livechat_close_modal_message,
+					enableTranscriptMobile,
 				} = {},
 				messages: {
 					conversationFinishedText,
@@ -569,6 +571,7 @@ export const ChatConnector = ({ ref, ...props }) => (
 				livechat_kill_switch={livechat_kill_switch}
 				livechat_kill_switch_message={livechat_kill_switch_message}
 				livechat_close_modal_message={livechat_close_modal_message}
+				enableTranscriptMobile = {enableTranscriptMobile}
 				route={route}
 			/>
 		)}

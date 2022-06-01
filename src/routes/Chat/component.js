@@ -126,6 +126,7 @@ export default class Chat extends Component {
 		onFinishChat,
 		onRemoveUserData,
 		onPrintTranscript,
+		enableTranscriptMobile,
 		lastReadMessageId,
 		queueInfo,
 		registrationRequired,
