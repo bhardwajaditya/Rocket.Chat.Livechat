@@ -5,6 +5,7 @@ import { h } from 'preact';
 
 import I18n from '../../../i18n';
 import { handleTranscript } from '../../../lib/transcript';
+import { isMobile } from '../../../lib/util';
 import store from '../../../store';
 import { Button } from '../../Button';
 import { createClassName, getAttachmentUrl, memo, normalizeTransferHistoryMessage, resolveDate } from '../../helpers';
@@ -41,6 +42,14 @@ const onClickFeedback = () => {
 
 const onClickTranscript = async () => {
 	await handleTranscript();
+};
+
+const canPrintTranscript = () => {
+	const { transcript, enableTranscriptMobile } = store.state.config.settings;
+	if (isMobile()) {
+		return transcript && enableTranscriptMobile;
+	}
+	return transcript;
 };
 
 const renderContent = ({
@@ -99,7 +108,7 @@ const renderContent = ({
 		<MessageBubble inverse={me} msgSequence={msgSequence} quoted={quoted} system={system}>
 			<MessageText style={showPostChatUrl && { width: '300px' }} text={text} system={system} />
 			{showPostChatUrl && <Button onClick={() => onClickFeedback()} className = {createClassName(styles, 'closedChatButton__content')}> { I18n.t('Give Feedback') } </Button>}
-			{isChatClosed && store.state.config.settings.transcript && <Button onClick={() => onClickTranscript()} className = {createClassName(styles, 'closedChatButton__content')}> { I18n.t('Save Transcript') } </Button>}
+			{isChatClosed && canPrintTranscript() && <Button onClick={() => onClickTranscript()} className = {createClassName(styles, 'closedChatButton__content')}> { I18n.t('Save Transcript') } </Button>}
 		</MessageBubble>
 	),
 	blocks && (
