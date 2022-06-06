@@ -11,7 +11,9 @@ export class ChatFinishedContainer extends Component {
 		route('/');
 	}
 
-	render = (props) => <ChatFinished {...props} onRedirectChat={this.handleRedirect} />
+	render = (props) => (
+		<ChatFinished {...props} onRedirectChat={this.handleRedirect} />
+	)
 }
 
 
