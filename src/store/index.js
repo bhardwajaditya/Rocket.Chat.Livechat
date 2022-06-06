@@ -41,7 +41,7 @@ export const initialState = () => ({
 	postChatUrl: null,
 });
 
-const dontPersist = ['messages', 'typing', 'loading', 'alerts', 'unread', 'noMoreMessages', 'modal', 'idleTimeoutTimers', 'incomingCallAlert', 'ongoingCall', 'postChatUrl'];
+const dontPersist = ['messages', 'typing', 'loading', 'alerts', 'unread', 'noMoreMessages', 'modal', 'idleTimeoutTimers', 'incomingCallAlert', 'ongoingCall', 'postChatUrl', 'visible'];
 export const store = new Store(initialState(), { dontPersist });
 
 if (process.env.NODE_ENV === 'development') {

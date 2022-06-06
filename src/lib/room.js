@@ -41,8 +41,10 @@ export const onChatClose = async () => {
 	if (!isMobile()) {
 		store.setState({ minimized: true });
 		parentCall('minimizeWindow');
+		route('/');
+	} else {
+		route('/chat-finished');
 	}
-	route('/chat-finished');
 	await store.setState({ loading: false });
 };
 

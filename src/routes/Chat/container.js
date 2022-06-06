@@ -386,7 +386,7 @@ export class ChatContainer extends Component {
 	}
 
 	async componentDidUpdate(prevProps) {
-		const { messages, visible, minimized, dispatch, room, route } = this.props;
+		const { messages, visible, minimized, dispatch, room, route, composerConfig, chatClosed } = this.props;
 		const { messages: prevMessages, alerts: prevAlerts } = prevProps;
 
 		if (messages && prevMessages && messages.length !== prevMessages.length && visible && !minimized) {
@@ -404,6 +404,11 @@ export class ChatContainer extends Component {
 				// Trigger Chat Opened when user goes to chat by registering or new chat
 				triggers.processChatOpened();
 			}
+		}
+
+		if (!chatClosed && composerConfig && composerConfig.disableText === CLOSE_CHAT && minimized && messages.length > 0) {
+			await dispatch({ messages: [], alerts: [], unread: null, lastReadMessageId: null, visible: true });
+			await loadConfig();
 		}
 
 		await this.checkConnectingAgent();
