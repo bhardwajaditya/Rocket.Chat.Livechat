@@ -46,6 +46,10 @@ const onClickTranscript = async () => {
 
 const canPrintTranscript = () => {
 	const { transcript, enableTranscriptMobile } = store.state.config.settings;
+	const { hidePrint } = store.state;
+	if (hidePrint) {
+		return false;
+	}
 	if (isMobile()) {
 		return transcript && enableTranscriptMobile;
 	}
