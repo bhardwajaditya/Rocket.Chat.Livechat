@@ -229,6 +229,10 @@ const transformAgentInformationOnMessage = (message) => {
 		return { ...message, u: { _id: message.u._id } };
 	}
 
+	if (message && message.u && message.u._id !== user._id && message.customFields && message.customFields.salesforceAgentName) {
+		return { ...message, alias: true, u: { ...message.u, name: message.customFields.salesforceAgentName } };
+	}
+
 	return message;
 };
 
@@ -279,6 +283,7 @@ Livechat.onMessage(async (message) => {
 	}
 
 	if (message.customFields) {
+		console.log(message.customFields.salesforceAgentName);
 		if (message.customFields.sneakPeekEnabled !== undefined || message.customFields.sneakPeekEnabled !== null) {
 			store.setState({ sneakPeekEnabled: message.customFields.sneakPeekEnabled });
 		}

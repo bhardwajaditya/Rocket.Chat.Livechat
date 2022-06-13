@@ -533,7 +533,7 @@ export const ChatConnector = ({ ref, ...props }) => (
 					phone: (agent.phone && agent.phone[0] && agent.phone[0].phoneNumber) || (agent.customFields && agent.customFields.phone),
 					avatar: agent.username ? {
 						description: agent.username,
-						src: getAvatarUrl(agent.username),
+						src: getAvatarUrl(agent.name || agent.username),
 					} : undefined,
 				} : undefined}
 				room={room}
