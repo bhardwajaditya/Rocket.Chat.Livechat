@@ -283,7 +283,6 @@ Livechat.onMessage(async (message) => {
 	}
 
 	if (message.customFields) {
-		console.log(message.customFields.salesforceAgentName);
 		if (message.customFields.sneakPeekEnabled !== undefined || message.customFields.sneakPeekEnabled !== null) {
 			store.setState({ sneakPeekEnabled: message.customFields.sneakPeekEnabled });
 		}
