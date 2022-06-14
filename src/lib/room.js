@@ -232,6 +232,18 @@ const transformAgentInformationOnMessage = (message) => {
 	return message;
 };
 
+const handleMessageCustomFields = async (message) => {
+	if (message.customFields) {
+		if (message.customFields.sneakPeekEnabled !== undefined || message.customFields.sneakPeekEnabled !== null) {
+			await store.setState({ sneakPeekEnabled: message.customFields.sneakPeekEnabled });
+		}
+		if (message.customFields.salesforceAgentName) {
+			const { agent } = store.state;
+			await store.setState({ agent: { ...agent, name: message.customFields.salesforceAgentName } });
+		}
+	}
+};
+
 Livechat.onTyping((username, isTyping) => {
 	const { typing, user, agent } = store.state;
 
@@ -278,15 +290,7 @@ Livechat.onMessage(async (message) => {
 		});
 	}
 
-	if (message.customFields) {
-		if (message.customFields.sneakPeekEnabled !== undefined || message.customFields.sneakPeekEnabled !== null) {
-			store.setState({ sneakPeekEnabled: message.customFields.sneakPeekEnabled });
-		}
-		if (message.customFields.salesforceAgentName) {
-			store.state.agent.name = message.customFields.salesforceAgentName;
-		}
-	}
-
+	await handleMessageCustomFields(message);
 	await processMessage(message);
 
 	if (canRenderMessage(message) !== true) {
@@ -326,6 +330,7 @@ export const loadMessages = async () => {
 		}
 		checkForPostChatUrlInMessage(message);
 		handleComposerOnMessage(message);
+		handleMessageCustomFields(message);
 		return message;
 	});
 
