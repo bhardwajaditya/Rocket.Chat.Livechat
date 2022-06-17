@@ -243,7 +243,7 @@ const handleMessageCustomFields = async (message) => {
 		}
 		if (message.customFields.salesforceAgentName) {
 			const { agent } = store.state;
-			await store.setState({ agent: { ...agent, name: message.customFields.salesforceAgentName } });
+			await store.setState({ agent: { ...agent, name: message.customFields.salesforceAgentName, alias: true } });
 		}
 	}
 };
