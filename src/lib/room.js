@@ -229,6 +229,10 @@ const transformAgentInformationOnMessage = (message) => {
 		return { ...message, u: { _id: message.u._id } };
 	}
 
+	if (message && message.u && message.u._id !== user._id && message.customFields && message.customFields.salesforceAgentName) {
+		return { ...message, alias: true, u: { ...message.u, name: message.customFields.salesforceAgentName } };
+	}
+
 	return message;
 };
 
@@ -239,7 +243,7 @@ const handleMessageCustomFields = async (message) => {
 		}
 		if (message.customFields.salesforceAgentName) {
 			const { agent } = store.state;
-			await store.setState({ agent: { ...agent, name: message.customFields.salesforceAgentName } });
+			await store.setState({ agent: { ...agent, name: message.customFields.salesforceAgentName, alias: true } });
 		}
 	}
 };
