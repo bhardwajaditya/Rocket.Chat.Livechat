@@ -3,6 +3,7 @@ import format from 'date-fns/format';
 import isToday from 'date-fns/isToday';
 import { h } from 'preact';
 
+import { Livechat } from '../../../api';
 import I18n from '../../../i18n';
 import { handleTranscript } from '../../../lib/transcript';
 import { isMobile } from '../../../lib/util';
@@ -36,11 +37,32 @@ import {
 import styles from './styles.scss';
 
 const onClickFeedback = () => {
-	const { postChatUrl } = store.state;
+	const { postChatUrl, room: { _id: rid } = {} } = store.state;
+
+	const loggerPayload = {
+		room_id: rid,
+		category: 'Survey',
+		action: 'link_clicked',
+		properties: {},
+		event_type: 'customer_action',
+	};
+	Livechat.sendLogsToSns(loggerPayload);
+
 	window.open(postChatUrl, '_blank');
 };
 
 const onClickTranscript = async () => {
+	const { room: { _id: rid } = {} } = store.state;
+
+	const loggerPayload = {
+		room_id: rid,
+		category: 'Transcript Download',
+		action: 'selected',
+		properties: {},
+		event_type: 'customer_action',
+	};
+	Livechat.sendLogsToSns(loggerPayload);
+
 	await handleTranscript();
 };
 

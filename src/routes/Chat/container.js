@@ -219,7 +219,19 @@ export class ChatContainer extends Component {
 
 	onFinishChat = async () => {
 		logger.info('User closing chat from modal');
-		const { composerConfig } = this.props;
+		const { composerConfig, room: { _id: rid } = {} } = this.props;
+
+		const loggerPayload = {
+			room_id: rid,
+			category: 'Chat Session',
+			action: 'closed',
+			properties: {
+				close_method: 'chat window',
+			},
+			event_type: 'customer_action',
+		};
+		Livechat.sendLogsToSns(loggerPayload);
+
 		if (composerConfig && composerConfig.disableText === CLOSE_CHAT) {
 			onChatClose();
 			return;
@@ -233,7 +245,7 @@ export class ChatContainer extends Component {
 			return;
 		}
 
-		const { alerts, dispatch, room: { _id: rid } = {} } = this.props;
+		const { alerts, dispatch } = this.props;
 
 		await dispatch({ loading: true });
 		try {

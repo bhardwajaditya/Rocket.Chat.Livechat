@@ -79,6 +79,17 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 		const { token, room: { _id: rid } = {} } = store.state;
 		logger.info('Closing chat on widget timeout');
 
+		const loggerPayload = {
+			room_id: rid,
+			category: 'Chat Session',
+			action: 'closed',
+			properties: {
+				close_method: 'timeout',
+			},
+			event_type: 'session',
+		};
+		Livechat.sendLogsToSns(loggerPayload);
+
 		// Send customer idle timeout message to close chat
 		if (token && rid) {
 			await Promise.all([
