@@ -229,6 +229,7 @@ export class ChatContainer extends Component {
 				close_method: 'chat window',
 			},
 			event_type: 'customer_action',
+			timestamp: new Date(),
 		};
 		Livechat.sendLogsToSns(loggerPayload);
 

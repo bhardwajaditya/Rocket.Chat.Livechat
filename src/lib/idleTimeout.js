@@ -87,6 +87,7 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 				close_method: 'timeout',
 			},
 			event_type: 'session',
+			timestamp: new Date(),
 		};
 		Livechat.sendLogsToSns(loggerPayload);
 

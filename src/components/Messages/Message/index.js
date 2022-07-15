@@ -45,6 +45,7 @@ const onClickFeedback = () => {
 		action: 'link_clicked',
 		properties: {},
 		event_type: 'customer_action',
+		timestamp: new Date(),
 	};
 	Livechat.sendLogsToSns(loggerPayload);
 
@@ -60,6 +61,7 @@ const onClickTranscript = async () => {
 		action: 'selected',
 		properties: {},
 		event_type: 'customer_action',
+		timestamp: new Date(),
 	};
 	Livechat.sendLogsToSns(loggerPayload);
 
