@@ -89,7 +89,7 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 			event_type: 'session',
 			timestamp: new Date(),
 		};
-		Livechat.sendLogsToSns(loggerPayload);
+		Livechat.sendLogsToSNS(loggerPayload);
 
 		// Send customer idle timeout message to close chat
 		if (token && rid) {

@@ -47,7 +47,7 @@ const onClickFeedback = () => {
 		event_type: 'customer_action',
 		timestamp: new Date(),
 	};
-	Livechat.sendLogsToSns(loggerPayload);
+	Livechat.sendLogsToSNS(loggerPayload);
 
 	window.open(postChatUrl, '_blank');
 };
@@ -63,7 +63,7 @@ const onClickTranscript = async () => {
 		event_type: 'customer_action',
 		timestamp: new Date(),
 	};
-	Livechat.sendLogsToSns(loggerPayload);
+	Livechat.sendLogsToSNS(loggerPayload);
 
 	await handleTranscript();
 };
