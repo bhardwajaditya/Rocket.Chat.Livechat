@@ -1,16 +1,16 @@
 import { store } from '../store';
 
 const { sessionStorage } = window;
-export const generateLoggerPayload = (category, action, properties, event_type) => {
+export const generateLoggerPayload = (category, action, properties, eventType) => {
 	const { room: { _id: rid } = {} } = store.state;
 	const loggerPayload = {
-		room_id: rid,
+		roomId: rid,
 		category,
 		action,
 		properties: { ...properties },
-		event_type,
+		eventType,
 		timestamp: new Date(),
-		tab_id: sessionStorage.getItem('sessionId'),
+		tabId: sessionStorage.getItem('sessionId'),
 	};
 	return loggerPayload;
 };
