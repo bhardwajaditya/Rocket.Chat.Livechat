@@ -1914,9 +1914,9 @@
   dependencies:
     eslint-plugin-import "^2.17.2"
 
-"@rocket.chat/sdk@git+https://github.com/WideChat/Rocket.Chat.js.SDK.git#sns_logger_widget":
+"@rocket.chat/sdk@git+https://github.com/WideChat/Rocket.Chat.js.SDK.git#multiple-clients":
   version "1.0.0-alpha.30"
-  resolved "git+https://github.com/WideChat/Rocket.Chat.js.SDK.git#2800f584ca769e6d931f2cce072cd57d24f05adf"
+  resolved "git+https://github.com/WideChat/Rocket.Chat.js.SDK.git#5844cdba438c3a1c84f1333352b6547f7f4d8ddf"
   dependencies:
     js-sha256 "^0.9.0"
     lru-cache "^4.1.1"
