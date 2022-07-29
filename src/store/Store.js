@@ -1,7 +1,9 @@
 import mitt from 'mitt';
 
+import { Livechat } from '../api';
 import { parentCall } from '../lib/parentCall';
 import { createToken } from '../lib/random';
+import { generateLoggerPayload } from '../lib/snsLoggerHelper';
 
 const { localStorage, sessionStorage } = window;
 
@@ -43,6 +45,8 @@ export default class Store {
 		window.addEventListener('load', () => {
 			const sessionId = createToken();
 			sessionStorage.setItem('sessionId', sessionId);
+			const loggerPayload = generateLoggerPayload('Window', 'opened', { session_id: sessionId }, 'customer_action');
+			Livechat.sendLogsToSNS(loggerPayload);
 			const { openSessionIds = [] } = this._state;
 			this.setState({ openSessionIds: [sessionId, ...openSessionIds] });
 		});

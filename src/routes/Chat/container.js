@@ -12,6 +12,7 @@ import { loadConfig } from '../../lib/main';
 import { parentCall, runCallbackEventEmitter } from '../../lib/parentCall';
 import { createToken } from '../../lib/random';
 import { initRoom, loadMessages, loadMoreMessages, defaultRoomParams, getGreetingMessages, onChatClose, reloadMessages, CLOSE_CHAT } from '../../lib/room';
+import { generateLoggerPayload } from '../../lib/snsLoggerHelper';
 import triggers from '../../lib/triggers';
 import store, { Consumer } from '../../store';
 import Chat from './component';
@@ -236,16 +237,7 @@ export class ChatContainer extends Component {
 
 		const { alerts, dispatch } = this.props;
 
-		const loggerPayload = {
-			room_id: rid,
-			category: 'Chat Session',
-			action: 'closed',
-			properties: {
-				close_method: 'chat window',
-			},
-			event_type: 'customer_action',
-			timestamp: new Date(),
-		};
+		const loggerPayload = generateLoggerPayload('Chat Session', 'closed', { close_method: 'chat window' }, 'customer_action');
 		Livechat.sendLogsToSNS(loggerPayload);
 
 		await dispatch({ loading: true });

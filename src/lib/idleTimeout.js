@@ -3,6 +3,7 @@ import { ModalManager } from '../components/Modal';
 import I18n from '../i18n';
 import { store } from '../store';
 import logger from './logger';
+import { generateLoggerPayload } from './snsLoggerHelper';
 
 const idleTimeoutWarningId = 'idleTimeoutWarning';
 
@@ -79,16 +80,7 @@ export const handleIdleTimeout = async (idleTimeoutConfig) => {
 		const { token, room: { _id: rid } = {} } = store.state;
 		logger.info('Closing chat on widget timeout');
 
-		const loggerPayload = {
-			room_id: rid,
-			category: 'Chat Session',
-			action: 'closed',
-			properties: {
-				close_method: 'timeout',
-			},
-			event_type: 'session',
-			timestamp: new Date(),
-		};
+		const loggerPayload = generateLoggerPayload('Chat Session', 'closed', { close_method: 'timeout' }, 'session');
 		Livechat.sendLogsToSNS(loggerPayload);
 
 		// Send customer idle timeout message to close chat

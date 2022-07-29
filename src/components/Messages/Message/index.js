@@ -5,6 +5,7 @@ import { h } from 'preact';
 
 import { Livechat } from '../../../api';
 import I18n from '../../../i18n';
+import { generateLoggerPayload } from '../../../lib/snsLoggerHelper';
 import { handleTranscript } from '../../../lib/transcript';
 import { isMobile } from '../../../lib/util';
 import store from '../../../store';
@@ -37,32 +38,16 @@ import {
 import styles from './styles.scss';
 
 const onClickFeedback = () => {
-	const { postChatUrl, room: { _id: rid } = {} } = store.state;
+	const { postChatUrl } = store.state;
 
-	const loggerPayload = {
-		room_id: rid,
-		category: 'Survey',
-		action: 'link_clicked',
-		properties: {},
-		event_type: 'customer_action',
-		timestamp: new Date(),
-	};
+	const loggerPayload = generateLoggerPayload('Survey', 'link_clicked', {}, 'customer_action');
 	Livechat.sendLogsToSNS(loggerPayload);
 
 	window.open(postChatUrl, '_blank');
 };
 
 const onClickTranscript = async () => {
-	const { room: { _id: rid } = {} } = store.state;
-
-	const loggerPayload = {
-		room_id: rid,
-		category: 'Transcript Download',
-		action: 'selected',
-		properties: {},
-		event_type: 'customer_action',
-		timestamp: new Date(),
-	};
+	const loggerPayload = generateLoggerPayload('Transcript Download', 'selected', {}, 'customer_action');
 	Livechat.sendLogsToSNS(loggerPayload);
 
 	await handleTranscript();
